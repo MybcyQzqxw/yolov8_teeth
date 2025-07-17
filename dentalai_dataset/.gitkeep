@@ -1,0 +1,9 @@
+# 此文件用于确保 dentalai_dataset 目录被 Git 跟踪
+# 请将下载的牙齿检测数据集文件放置在此目录中
+# 
+# 数据集下载地址: https://datasetninja.com/dentalai
+# 
+# 使用方法:
+# 1. 将 .tar 文件下载到此目录
+# 2. 运行: python scripts/dataset_extract.py
+# 3. 运行: python scripts/dataset_convert.py

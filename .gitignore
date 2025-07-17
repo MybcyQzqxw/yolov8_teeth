@@ -1,5 +1,6 @@
-# 模型文件
-models/
+# 模型文件（忽略模型权重，但保留目录）
+models/*
+!models/.gitkeep
 *.pt
 *.pth
 *.onnx
@@ -28,13 +29,17 @@ wheels/
 *.egg
 
 # 训练输出
-outputs/
+outputs/*
+!outputs/.gitkeep
 runs/
 wandb/
 
-# 数据集
-dentalai_dataset/
-yolo_dataset/
+# 数据集内容（忽略所有内容，但保留目录结构）
+dentalai_dataset/*
+!dentalai_dataset/.gitkeep
+
+yolo_dataset/*
+!yolo_dataset/.gitkeep
 
 # IDE
 .vscode/
