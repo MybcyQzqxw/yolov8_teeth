@@ -1,6 +1,6 @@
 # YOLOv8 牙齿检测项目
 
-基于YOLOv8的牙齿检测和识别项目，包含完整的数据处理、模型训练和结果可视化功能。
+基于 YOLOv8 的牙齿检测和识别项目，包含完整的数据处理、模型训练和结果可视化功能。
 
 ## 项目结构
 
@@ -37,7 +37,7 @@ conda create --name yolov8_teeth python=3.9 -y
 # 激活 conda 环境
 conda activate yolov8_teeth
 
-# 配置显卡驱动、CUDA 之后，安装合适的PyTorch版本
+# 配置显卡驱动、CUDA 之后，安装合适的 PyTorch 版本
 # 例如：CUDA 12.1
 conda install pytorch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 pytorch-cuda=12.1 -c pytorch -c nvidia
 # 例如：CPU Only
@@ -168,25 +168,25 @@ outputs/
 ### Q: 训练设备如何选择？
 - `--device auto`: 自动选择最佳设备
 - `--device 0`: 使用第一块GPU
-- `--device cpu`: 使用CPU (速度较慢)
+- `--device cpu`: 使用CPU（速度较慢）
 
 ## 主要功能
 
 ### 数据处理
-- 支持tar格式数据集自动解压
-- Supervisely格式到YOLO格式的转换
-- 自动创建train/val/test数据分割
+- 支持 `tar` 格式数据集自动解压
+- Supervisely 格式到 YOLO 格式的转换
+- 自动创建 train/val/test 数据分割
 
 ### 模型训练
-- 支持所有YOLOv8模型变体
+- 支持所有 YOLOv8 模型变体
 - 自动创建时间戳输出目录
-- 灵活的批量大小配置
+- 灵活的 batch 大小配置
 - 可选的日志和可视化输出
 
 ### 结果可视化
-- 损失曲线图 (Box Loss, Object Loss, Class Loss)
+- 损失曲线图（Box Loss、Object Loss、Class Loss）
 - 精度和召回率曲线
-- mAP指标可视化
+- mAP 指标可视化
 - 学习率调度可视化
 
 ## 开发说明
@@ -206,4 +206,4 @@ outputs/
 
 ## 许可证
 
-本项目遵循MIT许可证。
+本项目遵循 MIT 许可证。
