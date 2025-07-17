@@ -1,0 +1,6 @@
+train: train/images
+val: val/images
+test: test/images
+
+nc: 4
+names: ['Caries','Cavity','Crack','Tooth']
