@@ -51,7 +51,9 @@ pip install -r requirements.txt
 
 使用 Dentalai 数据集，下载地址：
 https://datasetninja.com/dentalai
+
 将 `tar` 格式的压缩包下载到项目根目录下的 `dentalai_dataset` 文件夹中。
+
 ```bash
 # 解压数据集
 python scripts/dataset_extract.py
