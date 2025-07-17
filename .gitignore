@@ -34,16 +34,12 @@ outputs/*
 runs/
 wandb/
 
-# 数据集内容（忽略所有内容，但保留目录结构和重要文件）
+# 数据集内容（忽略所有内容，但保留目录结构）
 dentalai_dataset/*
 !dentalai_dataset/.gitkeep
-!dentalai_dataset/README.md
-!dentalai_dataset/LICENSE.md
-!dentalai_dataset/meta.json
 
 yolo_dataset/*
 !yolo_dataset/.gitkeep
-!yolo_dataset/data.yaml
 
 # IDE
 .vscode/
