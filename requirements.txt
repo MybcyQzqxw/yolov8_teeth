@@ -1,0 +1,11 @@
+# YOLOv8 teeth detection project dependencies
+
+# Core YOLOv8 framework 
+ultralytics>=8.2.0
+
+# Data processing and visualization
+pandas>=1.5.0
+matplotlib>=3.5.0
+
+# Note: OpenCV, Pillow, NumPy, PyYAML, tqdm, requests 
+# are automatically installed as ultralytics dependencies
