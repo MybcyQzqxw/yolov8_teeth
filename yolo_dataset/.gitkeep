@@ -33,9 +33,3 @@ test: test/images
 nc: 4
 names: ['Caries', 'Cavity', 'Crack', 'Tooth']
 ```
-
-## ⚠️ Git 说明
-
-- 此目录的图像和标签文件会被 Git 忽略
-- 只有 `data.yaml` 配置文件和此说明文件会被跟踪
-- 避免将大型数据集文件提交到仓库中
