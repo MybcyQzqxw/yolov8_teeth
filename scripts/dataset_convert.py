@@ -6,8 +6,6 @@ import argparse
 
 def convert_dataset(src_dir, dest_dir):
     # 构建目标数据集目录结构
-    if os.path.exists(dest_dir):
-        shutil.rmtree(dest_dir)
     os.makedirs(dest_dir)
     os.makedirs(path.join(dest_dir, "train", "images"), exist_ok=True)
     os.makedirs(path.join(dest_dir, "train", "labels"), exist_ok=True)
