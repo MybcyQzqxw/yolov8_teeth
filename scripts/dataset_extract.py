@@ -21,19 +21,31 @@ def extract_tar_in_place(directory):
             print(f"解压失败：{filename}, 原因：{e}")
             extraction_failed = True
 
-    # 根据解压结果处理文件
     if extraction_failed:
         print("部分文件解压失败，删除所有解压出的文件...请重新下载压缩包！")
         for extracted in extracted_files:
             if os.path.exists(extracted):
                 if os.path.isdir(extracted):
-                    os.rmdir(extracted)  # 删除空目录
+                    # 递归删除目录内容（排除.gitkeep）
+                    for root, dirs, files in os.walk(extracted, topdown=False):
+                        for name in files:
+                            if name != '.gitkeep':
+                                os.remove(os.path.join(root, name))
+                        for name in dirs:
+                            os.rmdir(os.path.join(root, name))
+                    try:
+                        os.rmdir(extracted)
+                    except OSError:
+                        pass  # 如果还存在.gitkeep则不删
                 else:
-                    os.remove(extracted)  # 删除文件
+                    if os.path.basename(extracted) != '.gitkeep':
+                        os.remove(extracted)
     else:
         print("所有文件解压成功，删除所有 .tar 文件...")
         for tar_path in tar_files:
-            os.remove(os.path.join(directory, tar_path))  # 删除 .tar 文件
+            tar_full_path = os.path.join(directory, tar_path)
+            if os.path.exists(tar_full_path):
+                os.remove(tar_full_path)
 
 def main():
     parser = argparse.ArgumentParser(description="解压指定目录下的所有 .tar 文件")
