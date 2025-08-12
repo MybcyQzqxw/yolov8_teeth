@@ -35,3 +35,6 @@ preprocessed_dataset/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# models
+models/
