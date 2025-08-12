@@ -1,9 +1,14 @@
 import argparse
 import os
-import torch  # type: ignore
-from ultralytics import YOLO, settings  # type: ignore
-from utils.visualization import plot_loss_curve
-from utils.file_utils import create_output_dirs, validate_files, ensure_model_extension
+import sys
+import torch
+from ultralytics import YOLO, settings
+
+# 将项目根目录添加到 sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+from utils.yolov8.visualization import plot_loss_curve
+from utils.yolov8.file_utils import create_output_dirs, validate_files, ensure_model_extension
 
 # 配置ultralytics将模型下载到models文件夹，数据集使用当前目录
 settings.update({
@@ -104,8 +109,8 @@ def main():
                         help="训练设备: auto, cpu, 0, 1, 2, 3... (默认: auto)")
     
     # 数据和输出
-    parser.add_argument('--data_dir', '-d', type=str, default="./yolo_dataset",
-                        help="训练数据文件夹，包含 data.yaml (默认: ./yolo_dataset)")
+    parser.add_argument('--data_dir', '-d', type=str, default="./preprocessed_dataset/yolov8",
+                        help="训练数据文件夹，包含 data.yaml (默认: ./preprocessed_dataset/yolov8)")
     parser.add_argument('--output_dir', '-o', type=str, default="./outputs",
                         help="输出目录 (默认: ./outputs)")
     

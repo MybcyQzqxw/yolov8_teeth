@@ -52,50 +52,50 @@ pip install -r requirements.txt
 使用 Dentalai 数据集，下载地址：
 https://datasetninja.com/dentalai
 
-将 `tar` 格式的压缩包下载到项目根目录下的 `dentalai_dataset` 文件夹中。
+将 `tar` 格式的压缩包下载到项目根目录下的 `dataset/dentalai_dataset` 文件夹中。
 
 ```bash
 # 解压数据集
-python scripts/dataset_extract.py
+python scripts/data_preprocessing/dentalai/dataset_extract.py
 
 # 转换为 YOLO 格式
-python scripts/dataset_convert.py
+python scripts/data_preprocessing/dentalai/dataset_convert.py
 ```
 
 ### 3. 训练模型
 
 ```bash
 # 🚀 立即训练！（智能设备检测，自动选择 GPU 或 CPU）
-python train.py
+python scripts/train/train_yolov8.py
 ```
 
 ### 4. 进阶训练
 ```
 # 指定轮数
-python train.py --epochs 50
-python train.py -e 100
+python scripts/train/train_yolov8.py --epochs 50
+python scripts/train/train_yolov8.py -e 100
 
 # 指定模型
-python train.py --model yolov8n --epochs 50
-python train.py -m yolov8s -e 100
+python scripts/train/train_yolov8.py --model yolov8n --epochs 50
+python scripts/train/train_yolov8.py -m yolov8s -e 100
 
 # 完整参数示例
-python train.py -m yolov8l -e 200 -b 32 --imgsz 1024 --device 0 --patience 50
+python scripts/train/train_yolov8.py -m yolov8l -e 200 -b 32 --imgsz 1024 --device 0 --patience 50
 
 # 查看帮助信息
-python train.py --help
+python scripts/train/train_yolov8.py --help
 ```
 
 ## 训练参数详解
 
 ### 📋 默认参数总览
-使用 `python train.py` 命令时的默认配置：
+使用 `python scripts/train/train_yolov8.py` 命令时的默认配置：
 - 模型: yolov8m (平衡精度和速度)
 - 训练轮数: 30
 - 批量大小: 16
 - 图像尺寸: 640x640
 - 训练设备: 自动选择
-- 数据目录: ./yolo_dataset
+- 数据目录: ./preprocessed_dataset/yolov8
 - 输出目录: ./outputs
 - 日志记录: 开启
 

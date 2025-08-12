@@ -4,7 +4,7 @@ import os
 import json
 import argparse
 
-def convert_dataset(src_dir, dest_dir):
+def convert_dataset(src_dir, dest_dir, classes_path):
     # 构建目标数据集目录结构
     os.makedirs(path.join(dest_dir, "train", "images"), exist_ok=True)
     os.makedirs(path.join(dest_dir, "train", "labels"), exist_ok=True)
@@ -14,10 +14,9 @@ def convert_dataset(src_dir, dest_dir):
     os.makedirs(path.join(dest_dir, "test", "labels"), exist_ok=True)
 
     # 读取 meta.json 获取类别信息
-    meta_path = path.join(src_dir, "meta.json")
-    if not path.isfile(meta_path):
-        raise FileNotFoundError(f"找不到 meta.json 文件: {meta_path}")
-    with open(meta_path, "r", encoding="utf-8") as f:
+    if not path.isfile(classes_path):
+        raise FileNotFoundError(f"找不到 meta.json 文件: {classes_path}")
+    with open(classes_path, "r", encoding="utf-8") as f:
         meta = json.load(f)
 
     classes = {entry["title"]: idx for idx, entry in enumerate(meta["classes"])}
@@ -80,13 +79,15 @@ def convert_dataset(src_dir, dest_dir):
 
 def main():
     parser = argparse.ArgumentParser(description="Convert dataset to YOLOv8 format")
-    parser.add_argument("--src_dir", type=str, default="./dentalai_dataset",
+    parser.add_argument("--src_dir", type=str, default="./dataset/dentalai_dataset",
                         help="源数据集目录")
-    parser.add_argument("--dest_dir", type=str, default="./yolo_dataset",
+    parser.add_argument("--dest_dir", type=str, default="./preprocessed_dataset/yolov8",
                         help="目标数据集目录")
+    parser.add_argument("--classes_path", type=str, default="./dataset/dentalai_dataset/meta.json",
+                        help="类别定义文件路径")
     args = parser.parse_args()
 
-    convert_dataset(args.src_dir, args.dest_dir)
+    convert_dataset(args.src_dir, args.dest_dir, args.classes_path)
     print(f"数据集转换完成! 目标目录: {args.dest_dir}")
 
 if __name__ == "__main__":

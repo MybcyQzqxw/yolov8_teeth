@@ -49,8 +49,8 @@ def extract_tar_in_place(directory):
 
 def main():
     parser = argparse.ArgumentParser(description="解压指定目录下的所有 .tar 文件")
-    parser.add_argument('--directory', type=str, default='./dentalai_dataset',
-                        help="待解压的目录路径，默认为 './dentalai_dataset'")
+    parser.add_argument('--directory', type=str, default='./dataset/dentalai_dataset',
+                        help="待解压的目录路径，默认为 './dataset/dentalai_dataset'")
     args = parser.parse_args()
 
     if not os.path.isdir(args.directory):

@@ -1,60 +1,37 @@
-# 模型文件（忽略模型权重，但保留目录）
-models/*
-!models/.gitkeep
-*.pt
-*.pth
-*.onnx
-*.engine
-
-# Python 相关
+# Python
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
+*.pyo
+*.pyd
 *.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 
-# 训练输出
-outputs/*
-!outputs/.gitkeep
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Ultralytics & YOLO specific
+# 忽略所有 .pt 文件，但 models 目录下的除外
+*.pt
+!models/*.pt
+
+# 忽略训练输出
+outputs/
 runs/
-wandb/
 
-# 数据集内容（忽略所有内容，但保留目录结构）
-dentalai_dataset/*
-!dentalai_dataset/.gitkeep
+# Datasets
+# 忽略数据集文件夹下的所有内容
+# 为了保留空目录结构，请在每个需要保留的空目录下手动创建一个 .gitkeep 文件
+# 例如: dataset/dentalai_dataset/.gitkeep
+dataset/
+preprocessed_dataset/
 
-yolo_dataset/*
-!yolo_dataset/.gitkeep
-
-# IDE
+# IDE / Editor specific
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
 
-# 系统文件
+# OS specific
 .DS_Store
 Thumbs.db
-
-# 日志文件
-*.log
-
-# 临时文件
-*.tmp
-*.temp

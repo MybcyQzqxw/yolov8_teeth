@@ -13,7 +13,7 @@ class TrainingConfig:
     model: str = "yolov8n"  # 默认模型
     epochs: int = 30
     batch_size: str = "16"
-    data_dir: str = "./yolo_dataset"
+    data_dir: str = "./preprocessed_dataset/yolov8"
     output_dir: str = "./outputs"
     enable_logging: bool = True
     imgsz: int = 640
@@ -30,8 +30,8 @@ class TrainingConfig:
 @dataclass  
 class DatasetConfig:
     """数据集配置类"""
-    source_dir: str = "./dentalai_dataset"
-    target_dir: str = "./yolo_dataset"
+    source_dir: str = "./dataset/dentalai_dataset"
+    target_dir: str = "./preprocessed_dataset/yolov8"
     train_ratio: float = 0.7
     val_ratio: float = 0.2
     test_ratio: float = 0.1
