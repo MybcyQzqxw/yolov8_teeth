@@ -89,6 +89,27 @@ python scripts/train/train_yolov8.py -m yolov8l -e 200 -b 32 --imgsz 1024 --devi
 python scripts/train/train_yolov8.py --help
 ```
 
+### 5. 🔍 独立模型评估
+
+训练完成后，可以使用独立的评估脚本进行详细分析：
+
+```bash
+# 基于训练结果进行增强指标分析
+python scripts/evaluation/evaluate_model.py --results outputs/yolov8/train_xxx/weights/results.csv
+
+# 使用模型进行完整评估 (包括每类别详细分析)
+python scripts/evaluation/evaluate_model.py --model outputs/yolov8/train_xxx/weights/best.pt --data preprocessed_datasets/yolov8/data.yaml
+
+# 指定输出目录
+python scripts/evaluation/evaluate_model.py --results results.csv --output ./my_evaluation
+
+# 评估测试集 (需要模型文件)
+python scripts/evaluation/evaluate_model.py --model best.pt --data data.yaml --split test
+
+# 查看评估脚本帮助
+python scripts/evaluation/evaluate_model.py --help
+```
+
 ## 训练参数详解
 
 ### 📋 默认参数总览
@@ -145,17 +166,48 @@ python scripts/train/train_yolov8.py --help
 训练完成后会在 `outputs/` 目录生成：
 
 ```text
-outputs/
-└── train_yolov8n_50ep_2024_07_17_14_30_25/
+outputs/yolov8/
+└── train_yolov8m_30ep_2025_08_13_14_30_25/
     ├── weights/
     │   ├── best.pt           # 最佳模型权重
     │   ├── last.pt           # 最后一轮模型权重
     │   └── results.csv       # 训练结果数据
     └── logs/
-        └── training_analysis.png  # 训练分析图表
+        ├── training_analysis.png           # 传统训练分析图表
+        ├── enhanced_metrics_analysis.png   # 增强指标分析图表
+        ├── metrics_report.md               # 详细指标报告
+        ├── per_class_metrics.png           # 每类别指标对比图
+        └── per_class_report.md             # 每类别详细报告
 ```
 
-### 训练分析图表包含
+### 🔥 增强评估指标系统
+
+#### 📊 新增指标
+- **F1-Score**: 精确率与召回率的调和平均，衡量模型整体性能
+- **IoU质量分析**: 基于mAP指标的交并比质量评估
+- **每类别mAP**: 针对每个检测类别的独立mAP分析
+- **验证集损失跟踪**: 实时监控过拟合风险
+
+#### 📈 可视化图表
+- **增强指标图表** (`enhanced_metrics_analysis.png`):
+  - 损失曲线 (Box/Cls/DFL Loss)
+  - 精确率、召回率、F1-Score曲线
+  - mAP@0.5 和 mAP@0.5:0.95 (IoU质量)
+  - 验证集损失曲线
+  - 学习率调度
+  - 最终指标摘要表
+
+- **每类别对比图** (`per_class_metrics.png`):
+  - 各类别精确率vs召回率对比
+  - 各类别F1-Score排名
+  - 各类别mAP@0.5对比
+  - 各类别mAP@0.5:0.95对比
+
+#### 📋 详细报告
+- **整体指标报告** (`metrics_report.md`): 包含性能评估和改进建议
+- **每类别报告** (`per_class_report.md`): 详细的类别级别分析和优化建议
+
+### 传统训练分析图表包含
 
 - 📈 **损失曲线**: Box Loss, Object Loss, Class Loss
 - 🎯 **精度指标**: Precision, Recall 曲线

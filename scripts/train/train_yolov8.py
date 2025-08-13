@@ -9,6 +9,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 from utils.yolov8.visualization import plot_loss_curve
 from utils.yolov8.file_utils import create_output_dirs, validate_files, ensure_model_extension
+from utils.yolov8.metrics import plot_enhanced_metrics, generate_metrics_report
+from utils.yolov8.per_class_evaluator import evaluate_and_visualize_per_class
 
 # 配置ultralytics将模型下载到models/yolov8文件夹，数据集使用当前目录
 settings.update({
@@ -181,9 +183,53 @@ def main():
     if not args.nolog:
         results_csv = os.path.join(base_dir, "weights", "results.csv")
         if os.path.exists(results_csv):
-            plot_path = os.path.join(logs_dir, "training_analysis.png")
-            plot_loss_curve(results_csv, plot_path)
+            # 读取类别名称
+            import yaml
+            try:
+                with open(data_yaml, 'r', encoding='utf-8') as f:
+                    data_config = yaml.safe_load(f)
+                    class_names = data_config.get('names', ['Unknown'])
+            except:
+                class_names = ['Caries', 'Cavity', 'Crack', 'Tooth']  # 默认类别
+            
+            # 生成传统的训练分析图表
+            traditional_plot_path = os.path.join(logs_dir, "training_analysis.png")
+            plot_loss_curve(results_csv, traditional_plot_path)
+            
+            # 生成增强的指标可视化图表
+            enhanced_plot_path = os.path.join(logs_dir, "enhanced_metrics_analysis.png")
+            metrics = plot_enhanced_metrics(results_csv, enhanced_plot_path, class_names)
+            
+            # 生成详细的指标报告
+            report_path = os.path.join(logs_dir, "metrics_report.md")
+            generate_metrics_report(results_csv, class_names, report_path)
+            
+            # 进行每类别详细评估
+            best_model_path = os.path.join(base_dir, "weights", "best.pt")
+            if os.path.exists(best_model_path):
+                print("🔍 开始每类别详细指标评估...")
+                per_class_metrics = evaluate_and_visualize_per_class(
+                    best_model_path, data_yaml, class_names, logs_dir
+                )
+            else:
+                print("⚠️ 未找到best.pt模型文件，跳过每类别评估")
+            
             print(f"✅ 训练完成! 模型和日志保存至: {base_dir}")
+            print(f"📊 增强指标分析:")
+            print(f"   - 传统图表: {traditional_plot_path}")
+            print(f"   - 增强图表: {enhanced_plot_path}")
+            print(f"   - 详细报告: {report_path}")
+            print(f"   - 每类别指标: {os.path.join(logs_dir, 'per_class_metrics.png')}")
+            print(f"   - 每类别报告: {os.path.join(logs_dir, 'per_class_report.md')}")
+            
+            # 显示关键指标摘要
+            if metrics:
+                print(f"🎯 关键指标摘要:")
+                print(f"   - F1-Score: {metrics.get('f1_score', 0):.3f}")
+                print(f"   - Precision: {metrics.get('precision', 0):.3f}")
+                print(f"   - Recall: {metrics.get('recall', 0):.3f}")
+                print(f"   - mAP@0.5: {metrics.get('map50', 0):.3f}")
+                print(f"   - IoU质量: {metrics.get('avg_iou_at_0.5', 0):.3f}")
         else:
             print("⚠️ 未找到 results.csv，无法生成训练分析图表")
     else:
