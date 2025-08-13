@@ -181,8 +181,19 @@ def main():
 
     # 默认生成训练可视化图表（除非显式指定 --nolog）
     if not args.nolog:
+        # YOLOv8可能在嵌套的weights目录中保存results.csv
         results_csv = os.path.join(base_dir, "weights", "results.csv")
+        alt_results_csv = os.path.join(base_dir, "weights", "weights", "results.csv")
+        
+        # 检查results.csv文件位置
         if os.path.exists(results_csv):
+            csv_path_to_use = results_csv
+        elif os.path.exists(alt_results_csv):
+            csv_path_to_use = alt_results_csv
+        else:
+            csv_path_to_use = None
+            
+        if csv_path_to_use:
             # 读取类别名称
             import yaml
             try:
@@ -196,23 +207,39 @@ def main():
             
             # 1. 生成传统的训练分析图表
             traditional_plot_path = os.path.join(logs_dir, "training_analysis.png")
-            plot_loss_curve(results_csv, traditional_plot_path)
+            plot_loss_curve(csv_path_to_use, traditional_plot_path)
             
             # 2. 生成增强的指标可视化图表
             enhanced_plot_path = os.path.join(logs_dir, "enhanced_metrics_analysis.png")
-            metrics = plot_enhanced_metrics(results_csv, enhanced_plot_path, class_names)
+            metrics = plot_enhanced_metrics(csv_path_to_use, enhanced_plot_path, class_names)
             
             # 3. 生成详细的指标报告
             report_path = os.path.join(logs_dir, "metrics_report.md")
-            generate_metrics_report(results_csv, class_names, report_path)
+            generate_metrics_report(csv_path_to_use, class_names, report_path)
             
             # 4. 进行每类别详细评估并保存到CSV
-            best_model_path = os.path.join(base_dir, "weights", "best.pt")
-            per_class_metrics = None
+            # YOLOv8 创建嵌套的weights目录结构: project/name/weights/best.pt
+            best_model_path = os.path.join(base_dir, "weights", "weights", "best.pt")
+            # 备用路径，以防结构不同
+            alt_best_model_path = os.path.join(base_dir, "weights", "best.pt")
+            
+            # 检查模型文件是否存在
             if os.path.exists(best_model_path):
-                print("🔍 开始每类别详细指标评估...")
+                model_path_to_use = best_model_path
+                print(f"🔍 开始每类别详细指标评估... (使用: {model_path_to_use})")
+            elif os.path.exists(alt_best_model_path):
+                model_path_to_use = alt_best_model_path
+                print(f"🔍 开始每类别详细指标评估... (使用: {model_path_to_use})")
+            else:
+                model_path_to_use = None
+                print("⚠️ 未找到best.pt模型文件，跳过每类别评估")
+                print(f"   🔍 查找路径1: {best_model_path}")
+                print(f"   🔍 查找路径2: {alt_best_model_path}")
+            
+            per_class_metrics = None
+            if model_path_to_use:
                 per_class_metrics = evaluate_and_visualize_per_class(
-                    best_model_path, data_yaml, class_names, logs_dir
+                    model_path_to_use, data_yaml, class_names, logs_dir
                 )
                 
                 # 5. 生成完整的评估数据CSV文件
@@ -250,6 +277,8 @@ def main():
                     print(f"   - {class_name}: {class_metrics.get('f1_score', 0):.3f}")
         else:
             print("⚠️ 未找到 results.csv，无法生成训练分析图表")
+            print(f"   🔍 查找路径1: {results_csv}")
+            print(f"   🔍 查找路径2: {alt_results_csv}")
     else:
         print(f"✅ 训练完成! 模型保存至: {base_dir}")
 

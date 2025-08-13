@@ -62,38 +62,72 @@ class PerClassMetrics:
             per_class_metrics = {}
             
             if hasattr(results, 'box') and results.box is not None:
+                # 安全地提取数组数据的辅助函数
+                def safe_extract_array(attr_value):
+                    """安全提取数组数据，处理tensor和numpy数组"""
+                    if attr_value is None:
+                        return None
+                    if hasattr(attr_value, 'cpu'):  # PyTorch tensor
+                        return attr_value.cpu().numpy()
+                    elif hasattr(attr_value, 'numpy'):  # 某些类型的数组
+                        return attr_value.numpy()
+                    else:  # 已经是numpy数组
+                        return attr_value
+                
                 # AP@0.5 每类别
+                ap50_per_class = None
                 if hasattr(results.box, 'ap50') and results.box.ap50 is not None:
-                    ap50_per_class = results.box.ap50.cpu().numpy()
+                    ap50_per_class = safe_extract_array(results.box.ap50)
                     
                 # AP@0.5:0.95 每类别  
+                ap_per_class = None
                 if hasattr(results.box, 'ap') and results.box.ap is not None:
-                    ap_per_class = results.box.ap.cpu().numpy()
+                    ap_per_class = safe_extract_array(results.box.ap)
                     
                 # 精确率每类别
+                precision_per_class = None
                 if hasattr(results.box, 'p') and results.box.p is not None:
-                    precision_per_class = results.box.p.cpu().numpy()
+                    precision_per_class = safe_extract_array(results.box.p)
                     
                 # 召回率每类别
+                recall_per_class = None
                 if hasattr(results.box, 'r') and results.box.r is not None:
-                    recall_per_class = results.box.r.cpu().numpy()
+                    recall_per_class = safe_extract_array(results.box.r)
                 
                 # 组织每类别数据
                 for i, class_name in enumerate(self.class_names):
-                    if i < len(ap50_per_class):
-                        per_class_metrics[class_name] = {
-                            'precision': float(precision_per_class[i]) if i < len(precision_per_class) else 0.0,
-                            'recall': float(recall_per_class[i]) if i < len(recall_per_class) else 0.0,
-                            'ap50': float(ap50_per_class[i]) if i < len(ap50_per_class) else 0.0,
-                            'ap50_95': float(np.mean(ap_per_class[i])) if i < len(ap_per_class) and len(ap_per_class[i]) > 0 else 0.0,
-                            'f1_score': 0.0
-                        }
+                    # 初始化指标字典
+                    per_class_metrics[class_name] = {
+                        'precision': 0.0,
+                        'recall': 0.0,
+                        'ap50': 0.0,
+                        'ap50_95': 0.0,
+                        'f1_score': 0.0
+                    }
+                    
+                    # 安全地提取各项指标
+                    if precision_per_class is not None and i < len(precision_per_class):
+                        per_class_metrics[class_name]['precision'] = float(precision_per_class[i])
                         
-                        # 计算F1-Score
-                        p = per_class_metrics[class_name]['precision']
-                        r = per_class_metrics[class_name]['recall']
-                        if p + r > 0:
-                            per_class_metrics[class_name]['f1_score'] = 2 * p * r / (p + r)
+                    if recall_per_class is not None and i < len(recall_per_class):
+                        per_class_metrics[class_name]['recall'] = float(recall_per_class[i])
+                        
+                    if ap50_per_class is not None and i < len(ap50_per_class):
+                        per_class_metrics[class_name]['ap50'] = float(ap50_per_class[i])
+                        
+                    if ap_per_class is not None and i < len(ap_per_class):
+                        # ap_per_class[i] 可能是单个值或数组
+                        ap_val = ap_per_class[i]
+                        if hasattr(ap_val, '__len__') and len(ap_val) > 0:
+                            per_class_metrics[class_name]['ap50_95'] = float(np.mean(ap_val))
+                        else:
+                            per_class_metrics[class_name]['ap50_95'] = float(ap_val) if not np.isnan(ap_val) else 0.0
+                        
+                    # 计算F1-Score
+                    p = per_class_metrics[class_name]['precision']
+                    r = per_class_metrics[class_name]['recall']
+                    if p + r > 0:
+                        per_class_metrics[class_name]['f1_score'] = 2 * p * r / (p + r)
             
             return per_class_metrics
             
