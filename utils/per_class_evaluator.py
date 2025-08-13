@@ -55,24 +55,28 @@ class PerClassMetrics:
                 return {}
         
         try:
-            # 运行验证评估
+            # 运行验证评估（禁用文件输出，避免重复生成）
             print(f"[🔄] 正在评估 {split} 数据集...")
             
-            # 如果指定了输出目录，设置YOLOv8的输出路径
-            if output_dir:
-                # 确保输出目录存在
-                os.makedirs(output_dir, exist_ok=True)
-                # 设置project和name参数，让验证结果保存到指定目录
+            # 创建临时目录用于YOLOv8输出，完成后删除
+            import tempfile
+            import shutil
+            
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # 只提取指标数据，输出到临时目录
                 results = self.model.val(
                     data=self.data_yaml_path, 
                     split=split, 
                     verbose=False,
-                    project=output_dir,
-                    name='validation',
+                    save=False,      # 禁用保存图片
+                    plots=False,     # 禁用生成图表
+                    save_json=False, # 禁用保存JSON
+                    save_txt=False,  # 禁用保存标签
+                    project=temp_dir,  # 输出到临时目录
+                    name='temp_val',   # 临时验证名称
                     exist_ok=True
                 )
-            else:
-                results = self.model.val(data=self.data_yaml_path, split=split, verbose=False)
+                # 临时目录会在with块结束时自动删除
             
             # 提取每类别指标
             per_class_metrics = {}
@@ -338,9 +342,9 @@ def evaluate_and_visualize_per_class(model_path, data_yaml_path, class_names, ou
         # 创建评估器
         evaluator = PerClassMetrics(model_path, data_yaml_path, class_names)
         
-        # 评估验证集（将验证结果输出到指定目录）
+        # 评估验证集（只提取指标，不生成重复文件）
         print("[🔄] 开始每类别指标评估...")
-        metrics = evaluator.evaluate_per_class('val', output_dir=output_dir)
+        metrics = evaluator.evaluate_per_class('val')
         
         if not metrics:
             print("[!] 每类别指标评估失败")
