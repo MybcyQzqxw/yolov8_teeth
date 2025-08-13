@@ -30,7 +30,7 @@ class TrainingConfig:
 @dataclass  
 class DatasetConfig:
     """数据集配置类"""
-    source_dir: str = "./dataset/dentalai_dataset"
+    source_dir: str = "./dataset/dentalai"
     target_dir: str = "./preprocessed_dataset/yolov8"
     train_ratio: float = 0.7
     val_ratio: float = 0.2

@@ -79,11 +79,11 @@ def convert_dataset(src_dir, dest_dir, classes_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Convert dataset to YOLOv8 format")
-    parser.add_argument("--src_dir", type=str, default="./dataset/dentalai_dataset",
+    parser.add_argument("--src_dir", type=str, default="./dataset/dentalai",
                         help="源数据集目录")
     parser.add_argument("--dest_dir", type=str, default="./preprocessed_dataset/yolov8",
                         help="目标数据集目录")
-    parser.add_argument("--classes_path", type=str, default="./dataset/dentalai_dataset/meta.json",
+    parser.add_argument("--classes_path", type=str, default="./dataset/dentalai/meta.json",
                         help="类别定义文件路径")
     args = parser.parse_args()
 
