@@ -23,23 +23,18 @@ Thumbs.db
 # 忽略所有 .pt 文件
 *.pt
 
-# 忽略源数据集
-dataset/*
-# 但保留目录结构
-dataset/dentalai_dataset/*
-!dataset/dentalai_dataset/.gitkeep
+# 忽略源数据集，但保留目录结构
+dataset/*/*
+!dataset/*/.gitkeep
 
-# 忽略处理后数据集
-preprocessed_dataset/yolov8
-# 但保留目录结构
-!preprocessed_dataset/yolov8/.gitkeep
+# 忽略处理后数据集，但保留目录结构
+preprocessed_dataset/*/*
+!preprocessed_dataset/*/.gitkeep
 
-# 忽略模型
-models/yolov8
-# 但保留目录结构
-!models/yolov8/.gitkeep
+# 忽略模型，但保留目录结构
+models/*/*
+!models/*/.gitkeep
 
-# 忽略训练输出
-outputs/yolov8
-# 但保留目录结构
-!outputs/yolov8/.gitkeep
+# 忽略训练输出，但保留目录结构
+outputs/*/*
+!outputs/*/.gitkeep
