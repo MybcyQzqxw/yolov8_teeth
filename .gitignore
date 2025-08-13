@@ -12,24 +12,6 @@ env/
 venv/
 ENV/
 
-# Ultralytics & YOLO specific
-# 忽略所有 .pt 文件，但 models 目录下的除外
-*.pt
-
-# 忽略训练输出
-outputs/
-runs/
-
-# Datasets
-# 忽略数据集文件夹下的所有内容
-# 为了保留空目录结构，请在每个需要保留的空目录下手动创建一个 .gitkeep 文件
-# 例如: dataset/dentalai_dataset/.gitkeep
-dataset/
-# !dataset/dentalai_dataset/.gitkeep
-
-preprocessed_dataset/
-# !preprocessed_dataset/yolov8/.gitkeep
-
 # IDE / Editor specific
 .vscode/
 .idea/
@@ -38,5 +20,25 @@ preprocessed_dataset/
 .DS_Store
 Thumbs.db
 
-# models
-models/
+# 忽略所有 .pt 文件
+*.pt
+
+# 忽略源数据集
+dataset/dentalai_dataset
+# 但保留目录结构
+!dataset/dentalai_dataset/.gitkeep
+
+# 忽略处理后数据集
+preprocessed_dataset/yolov8
+# 但保留目录结构
+!preprocessed_dataset/yolov8/.gitkeep
+
+# 忽略模型
+models/yolov8
+# 但保留目录结构
+!models/yolov8/.gitkeep
+
+# 忽略训练输出
+outputs/yolov8
+# 但保留目录结构
+!outputs/yolov8/.gitkeep
