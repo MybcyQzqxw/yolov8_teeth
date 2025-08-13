@@ -134,7 +134,7 @@ def main():
     print(f"   📦 模型: {model_file}")
     print(f"   📊 训练轮数: {args.epochs}")
     print(f"   📏 批量大小: {args.batch}")
-    print(f"   🖼️  图像尺寸: {args.imgsz}")
+    print(f"   🖼️ 图像尺寸: {args.imgsz}")
     print(f"   💻 训练设备: {device}")
     print(f"   📁 数据目录: {args.data_dir}")
     print(f"   💾 输出目录: {base_dir}")
@@ -150,7 +150,6 @@ def main():
         model = YOLO(model_file)
         print("✅ 模型初始化成功!")
         
-        # 训练后再次清理可能生成的模型文件
         print("🚀 开始训练...")
         result = model.train(
             data=data_yaml,
