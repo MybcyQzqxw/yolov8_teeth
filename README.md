@@ -10,9 +10,9 @@ yolov8_teeth/
 ├── requirements.txt        # 项目依赖
 ├── train.py                # 主训练脚本 (唯一训练入口)
 ├── models/                 # 预训练模型存储目录
-├── dataset/                # 原始数据集目录
+├── datasets/               # 原始数据集目录
 │   └── dentalai/          # Dentalai 数据集
-├── preprocessed_dataset/   # 处理后的数据集目录
+├── preprocessed_datasets/  # 处理后的数据集目录
 ├── outputs/                # 训练输出目录
 ├── scripts/                # 数据处理脚本
 │   ├── dataset_extract.py  # 数据集解压工具
@@ -53,7 +53,7 @@ pip install -r requirements.txt
 使用 Dentalai 数据集，下载地址：
 https://datasetninja.com/dentalai
 
-将 `tar` 格式的压缩包下载到项目根目录下的 `dataset/dentalai` 文件夹中。
+将 `tar` 格式的压缩包下载到项目根目录下的 `datasets/dentalai` 文件夹中。
 
 ```bash
 # 解压数据集
@@ -99,7 +99,7 @@ python scripts/train/train_yolov8.py --help
 - 批量大小: 16
 - 图像尺寸: 640x640
 - 训练设备: 自动选择
-- 数据目录: ./preprocessed_dataset/yolov8
+- 数据目录: ./preprocessed_datasets/yolov8
 - 输出目录: ./outputs
 - 日志记录: 开启
 

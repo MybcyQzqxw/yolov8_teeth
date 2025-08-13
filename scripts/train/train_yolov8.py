@@ -13,7 +13,7 @@ from utils.yolov8.file_utils import create_output_dirs, validate_files, ensure_m
 # 配置ultralytics将模型下载到models/yolov8文件夹，数据集使用当前目录
 settings.update({
     'weights_dir': 'models/yolov8',
-    'datasets_dir': '.',
+    'datasets_dir': 'dataset',
     'runs_dir': 'outputs/yolov8'  # 设置运行输出目录
 })
 
@@ -85,8 +85,8 @@ def main():
                         help="训练设备: auto, cpu, 0, 1, 2, 3... (默认: auto)")
     
     # 数据和输出
-    parser.add_argument('--data_dir', '-d', type=str, default="./preprocessed_dataset/yolov8",
-                        help="训练数据文件夹，包含 data.yaml (默认: ./preprocessed_dataset/yolov8)")
+    parser.add_argument('--data_dir', '-d', type=str, default="./preprocessed_datasets/yolov8",
+                        help="训练数据文件夹，包含 data.yaml (默认: ./preprocessed_datasets/yolov8)")
     parser.add_argument('--output_dir', '-o', type=str, default="./outputs/yolov8",
                         help="输出目录 (默认: ./outputs/yolov8)")
     

@@ -24,12 +24,12 @@ Thumbs.db
 *.pt
 
 # 忽略源数据集，但保留目录结构
-dataset/*/*
-!dataset/*/.gitkeep
+datasets/*/*
+!datasets/*/.gitkeep
 
 # 忽略处理后数据集，但保留目录结构
-preprocessed_dataset/*/*
-!preprocessed_dataset/*/.gitkeep
+preprocessed_datasets/*/*
+!preprocessed_datasets/*/.gitkeep
 
 # 忽略模型，但保留目录结构
 models/*/*
