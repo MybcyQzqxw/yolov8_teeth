@@ -7,9 +7,9 @@ from ultralytics import YOLO, settings
 # 将项目根目录添加到 sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from utils.visualization import plot_loss_curve
+from utils.visualization import plot_training_metrics
 from utils.file_utils import create_output_dirs, validate_files, ensure_model_extension, reorganize_training_outputs
-from utils.metrics import plot_enhanced_metrics, generate_metrics_report
+from utils.metrics import generate_metrics_report, enhanced_metrics_analysis
 from utils.per_class_evaluator import evaluate_and_visualize_per_class
 
 # 配置ultralytics将模型下载到models文件夹，数据集使用当前目录
@@ -194,13 +194,12 @@ def main():
             results_csv = os.path.join(temp_weights_dir, "results.csv")
             
             if os.path.exists(results_csv):
-                # 1. 生成传统的训练分析图表
-                traditional_plot_path = os.path.join(temp_logs_dir, "training_analysis.png")
-                plot_loss_curve(results_csv, traditional_plot_path)
+                # 1. 生成完整的训练指标可视化图表
+                metrics_plot_path = os.path.join(temp_logs_dir, "training_metrics.png")
+                plot_training_metrics(results_csv, metrics_plot_path)
                 
-                # 2. 生成增强的指标可视化图表
-                enhanced_plot_path = os.path.join(temp_logs_dir, "enhanced_metrics_analysis.png")
-                metrics = plot_enhanced_metrics(results_csv, enhanced_plot_path, class_names)
+                # 2. 计算综合指标分析
+                metrics = enhanced_metrics_analysis(results_csv, class_names)
                 
                 # 3. 生成详细的指标报告
                 report_path = os.path.join(temp_logs_dir, "metrics_report.md")

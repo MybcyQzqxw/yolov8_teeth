@@ -213,41 +213,28 @@ def merge_training_metrics(yolo_weights_dir, dirs):
 
 
 def merge_training_images(dirs):
-    """合并训练指标图片"""
+    """处理训练指标图片 - 现在直接使用统一生成的图片，无需合并"""
     try:
-        training_img = os.path.join(dirs['base'], 'logs', 'training_analysis.png')
-        enhanced_img = os.path.join(dirs['base'], 'logs', 'enhanced_metrics_analysis.png')
-        output_img = os.path.join(dirs['logs'], 'training_metrics.png')
+        # 现在直接使用统一生成的training_metrics.png
+        source_img = os.path.join(dirs['base'], 'logs', 'training_metrics.png')
+        target_img = os.path.join(dirs['logs'], 'training_metrics.png')
         
-        # 检查图片是否存在
-        if not (os.path.exists(training_img) and os.path.exists(enhanced_img)):
-            return
-            
-        # 创建合并图片
-        fig, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(20, 8))
+        # 如果源图片存在且与目标不是同一个文件，则移动
+        if os.path.exists(source_img) and source_img != target_img:
+            import shutil
+            shutil.move(source_img, target_img)
         
-        # 读取并显示第一张图片
-        img1 = mpimg.imread(training_img)
-        ax1.imshow(img1)
-        ax1.set_title('Training Progress', fontsize=16, pad=20)
-        ax1.axis('off')
-        
-        # 读取并显示第二张图片  
-        img2 = mpimg.imread(enhanced_img)
-        ax2.imshow(img2)
-        ax2.set_title('Enhanced Metrics Analysis', fontsize=16, pad=20)
-        ax2.axis('off')
-        
-        plt.tight_layout()
-        plt.savefig(output_img, dpi=150, bbox_inches='tight')
-        plt.close()
-        
-        # 删除原始图片
-        os.remove(training_img)
-        os.remove(enhanced_img)
+        # 清理可能存在的旧的分离图片文件
+        old_files = [
+            os.path.join(dirs['base'], 'logs', 'training_analysis.png'),
+            os.path.join(dirs['base'], 'logs', 'enhanced_metrics_analysis.png')
+        ]
+        for old_file in old_files:
+            if os.path.exists(old_file):
+                os.remove(old_file)
         
     except Exception as e:
-        print(f"⚠️ 合并训练图片失败: {e}")
+        print(f"⚠️ 处理训练图片失败: {e}")
 
 
 def create_analysis_readme(dirs, class_names):
