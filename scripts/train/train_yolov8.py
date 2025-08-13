@@ -15,7 +15,7 @@ from utils.per_class_evaluator import evaluate_and_visualize_per_class
 # 配置ultralytics将模型下载到models文件夹，数据集使用当前目录
 settings.update({
     'weights_dir': 'models',
-    'datasets_dir': 'dataset',
+    'datasets_dir': 'datasets',
     'runs_dir': 'outputs/dentalai'  # 设置运行输出目录
 })
 
