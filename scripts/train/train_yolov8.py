@@ -133,7 +133,7 @@ def main():
     print(f"   📦 模型: {model_file}")
     print(f"   📊 训练轮数: {args.epochs}")
     print(f"   📏 批量大小: {args.batch}")
-    print(f"   🖼️ 图像尺寸: {args.imgsz}")
+    print(f"   🖼️  图像尺寸: {args.imgsz}")
     print(f"   💻 训练设备: {device}")
     print(f"   📁 数据目录: {args.data_dir}")
     print(f"   💾 输出目录: {base_dir}")
