@@ -7,10 +7,10 @@ from ultralytics import YOLO, settings
 # 将项目根目录添加到 sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from utils.yolov8.visualization import plot_loss_curve
-from utils.yolov8.file_utils import create_output_dirs, validate_files, ensure_model_extension
-from utils.yolov8.metrics import plot_enhanced_metrics, generate_metrics_report
-from utils.yolov8.per_class_evaluator import evaluate_and_visualize_per_class
+from utils.visualization import plot_loss_curve
+from utils.file_utils import create_output_dirs, validate_files, ensure_model_extension
+from utils.metrics import plot_enhanced_metrics, generate_metrics_report
+from utils.per_class_evaluator import evaluate_and_visualize_per_class
 
 # 配置ultralytics将模型下载到models文件夹，数据集使用当前目录
 settings.update({
