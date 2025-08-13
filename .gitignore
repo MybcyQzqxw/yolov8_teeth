@@ -31,10 +31,10 @@ datasets/*/*
 preprocessed_datasets/*/*
 !preprocessed_datasets/*/.gitkeep
 
-# 忽略模型，但保留目录结构
-models/*/*
-!models/*/.gitkeep
-
 # 忽略训练输出，但保留目录结构
 outputs/*/*
 !outputs/*/.gitkeep
+
+# 忽略模型，但保留目录结构
+models/*
+!models/.gitkeep
