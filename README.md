@@ -70,7 +70,8 @@ python scripts/train/train_yolov8.py
 ```
 
 ### 4. 进阶训练
-```
+
+``` bash
 # 指定轮数
 python scripts/train/train_yolov8.py --epochs 50
 python scripts/train/train_yolov8.py -e 100
@@ -89,7 +90,9 @@ python scripts/train/train_yolov8.py --help
 ## 训练参数详解
 
 ### 📋 默认参数总览
+
 使用 `python scripts/train/train_yolov8.py` 命令时的默认配置：
+
 - 模型: yolov8m (平衡精度和速度)
 - 训练轮数: 30
 - 批量大小: 16
