@@ -89,27 +89,6 @@ python scripts/train/train_yolov8.py -m yolov8l -e 200 -b 32 --imgsz 1024 --devi
 python scripts/train/train_yolov8.py --help
 ```
 
-### 5. 🔍 独立模型评估
-
-训练完成后，可以使用独立的评估脚本进行详细分析：
-
-```bash
-# 基于训练结果进行增强指标分析
-python scripts/evaluation/evaluate_model.py --results outputs/yolov8/train_xxx/weights/results.csv
-
-# 使用模型进行完整评估 (包括每类别详细分析)
-python scripts/evaluation/evaluate_model.py --model outputs/yolov8/train_xxx/weights/best.pt --data preprocessed_datasets/yolov8/data.yaml
-
-# 指定输出目录
-python scripts/evaluation/evaluate_model.py --results results.csv --output ./my_evaluation
-
-# 评估测试集 (需要模型文件)
-python scripts/evaluation/evaluate_model.py --model best.pt --data data.yaml --split test
-
-# 查看评估脚本帮助
-python scripts/evaluation/evaluate_model.py --help
-```
-
 ## 训练参数详解
 
 ### 📋 默认参数总览
@@ -171,22 +150,34 @@ outputs/yolov8/
     ├── weights/
     │   ├── best.pt           # 最佳模型权重
     │   ├── last.pt           # 最后一轮模型权重
-    │   └── results.csv       # 训练结果数据
+    │   └── results.csv       # 原始训练结果数据
     └── logs/
         ├── training_analysis.png           # 传统训练分析图表
         ├── enhanced_metrics_analysis.png   # 增强指标分析图表
         ├── metrics_report.md               # 详细指标报告
         ├── per_class_metrics.png           # 每类别指标对比图
-        └── per_class_report.md             # 每类别详细报告
+        ├── per_class_report.md             # 每类别详细报告
+        └── complete_evaluation_metrics.csv # 🆕 完整评估指标CSV
 ```
 
 ### 🔥 增强评估指标系统
 
+训练完成后，系统会自动生成所有增强评估指标，无需额外脚本！
+
 #### 📊 新增指标
+
 - **F1-Score**: 精确率与召回率的调和平均，衡量模型整体性能
 - **IoU质量分析**: 基于mAP指标的交并比质量评估
 - **每类别mAP**: 针对每个检测类别的独立mAP分析
 - **验证集损失跟踪**: 实时监控过拟合风险
+
+#### 📋 完整评估CSV文件
+
+新增的 `complete_evaluation_metrics.csv` 包含：
+- 整体性能指标 (Overall metrics)
+- 每类别详细指标 (Per-class metrics) 
+- F1-Score, Precision, Recall, mAP@0.5, mAP@0.5:0.95
+- IoU质量评估数据
 
 #### 📈 可视化图表
 - **增强指标图表** (`enhanced_metrics_analysis.png`):

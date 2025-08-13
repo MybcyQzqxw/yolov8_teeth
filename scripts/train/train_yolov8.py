@@ -192,35 +192,47 @@ def main():
             except:
                 class_names = ['Caries', 'Cavity', 'Crack', 'Tooth']  # 默认类别
             
-            # 生成传统的训练分析图表
+            print("📊 开始生成完整的评估报告...")
+            
+            # 1. 生成传统的训练分析图表
             traditional_plot_path = os.path.join(logs_dir, "training_analysis.png")
             plot_loss_curve(results_csv, traditional_plot_path)
             
-            # 生成增强的指标可视化图表
+            # 2. 生成增强的指标可视化图表
             enhanced_plot_path = os.path.join(logs_dir, "enhanced_metrics_analysis.png")
             metrics = plot_enhanced_metrics(results_csv, enhanced_plot_path, class_names)
             
-            # 生成详细的指标报告
+            # 3. 生成详细的指标报告
             report_path = os.path.join(logs_dir, "metrics_report.md")
             generate_metrics_report(results_csv, class_names, report_path)
             
-            # 进行每类别详细评估
+            # 4. 进行每类别详细评估并保存到CSV
             best_model_path = os.path.join(base_dir, "weights", "best.pt")
+            per_class_metrics = None
             if os.path.exists(best_model_path):
                 print("🔍 开始每类别详细指标评估...")
                 per_class_metrics = evaluate_and_visualize_per_class(
                     best_model_path, data_yaml, class_names, logs_dir
                 )
+                
+                # 5. 生成完整的评估数据CSV文件
+                if per_class_metrics:
+                    evaluation_csv_path = os.path.join(logs_dir, "complete_evaluation_metrics.csv")
+                    _save_complete_evaluation_csv(metrics, per_class_metrics, class_names, evaluation_csv_path)
+                    print(f"📋 完整评估数据已保存至: {evaluation_csv_path}")
             else:
                 print("⚠️ 未找到best.pt模型文件，跳过每类别评估")
             
-            print(f"✅ 训练完成! 模型和日志保存至: {base_dir}")
-            print(f"📊 增强指标分析:")
-            print(f"   - 传统图表: {traditional_plot_path}")
-            print(f"   - 增强图表: {enhanced_plot_path}")
-            print(f"   - 详细报告: {report_path}")
-            print(f"   - 每类别指标: {os.path.join(logs_dir, 'per_class_metrics.png')}")
-            print(f"   - 每类别报告: {os.path.join(logs_dir, 'per_class_report.md')}")
+            print(f"✅ 训练完成! 模型和完整评估结果保存至: {base_dir}")
+            print(f"📊 评估结果文件:")
+            print(f"   📈 训练曲线: {traditional_plot_path}")
+            print(f"   📊 增强分析: {enhanced_plot_path}")
+            print(f"   📋 整体报告: {report_path}")
+            
+            if per_class_metrics:
+                print(f"   🏷️  每类别图表: {os.path.join(logs_dir, 'per_class_metrics.png')}")
+                print(f"   📊 每类别报告: {os.path.join(logs_dir, 'per_class_report.md')}")
+                print(f"   📋 完整评估CSV: {os.path.join(logs_dir, 'complete_evaluation_metrics.csv')}")
             
             # 显示关键指标摘要
             if metrics:
@@ -230,10 +242,74 @@ def main():
                 print(f"   - Recall: {metrics.get('recall', 0):.3f}")
                 print(f"   - mAP@0.5: {metrics.get('map50', 0):.3f}")
                 print(f"   - IoU质量: {metrics.get('avg_iou_at_0.5', 0):.3f}")
+                
+            # 显示每类别F1-Score摘要
+            if per_class_metrics:
+                print(f"🏆 每类别F1-Score:")
+                for class_name, class_metrics in per_class_metrics.items():
+                    print(f"   - {class_name}: {class_metrics.get('f1_score', 0):.3f}")
         else:
             print("⚠️ 未找到 results.csv，无法生成训练分析图表")
     else:
         print(f"✅ 训练完成! 模型保存至: {base_dir}")
+
+
+def _save_complete_evaluation_csv(overall_metrics, per_class_metrics, class_names, save_path):
+    """
+    保存完整的评估指标到CSV文件
+    
+    Args:
+        overall_metrics (dict): 整体指标
+        per_class_metrics (dict): 每类别指标
+        class_names (list): 类别名称
+        save_path (str): 保存路径
+    """
+    try:
+        import pandas as pd
+        
+        # 准备数据
+        data = []
+        
+        # 添加整体指标行
+        overall_row = {
+            'Type': 'Overall',
+            'Class': 'All',
+            'Precision': overall_metrics.get('precision', 0),
+            'Recall': overall_metrics.get('recall', 0),
+            'F1_Score': overall_metrics.get('f1_score', 0),
+            'mAP_50': overall_metrics.get('map50', 0),
+            'mAP_50_95': overall_metrics.get('map50_95', 0),
+            'IoU_Quality_50': overall_metrics.get('avg_iou_at_0.5', 0),
+            'IoU_Quality_50_95': overall_metrics.get('avg_iou_0.5_to_0.95', 0),
+            'Epoch': int(overall_metrics.get('epoch', 0))
+        }
+        data.append(overall_row)
+        
+        # 添加每类别指标行
+        if per_class_metrics:
+            for class_name, class_metrics in per_class_metrics.items():
+                class_row = {
+                    'Type': 'Per_Class',
+                    'Class': class_name,
+                    'Precision': class_metrics.get('precision', 0),
+                    'Recall': class_metrics.get('recall', 0),
+                    'F1_Score': class_metrics.get('f1_score', 0),
+                    'mAP_50': class_metrics.get('ap50', 0),
+                    'mAP_50_95': class_metrics.get('ap50_95', 0),
+                    'IoU_Quality_50': class_metrics.get('ap50', 0),  # AP50作为IoU@0.5质量指标
+                    'IoU_Quality_50_95': class_metrics.get('ap50_95', 0),  # AP50-95作为综合IoU质量
+                    'Epoch': int(overall_metrics.get('epoch', 0))
+                }
+                data.append(class_row)
+        
+        # 创建DataFrame并保存
+        df = pd.DataFrame(data)
+        df.to_csv(save_path, index=False, float_format='%.4f')
+        
+        print(f"[✓] 完整评估指标CSV已保存: {save_path}")
+        
+    except Exception as e:
+        print(f"[!] 保存完整评估CSV失败: {e}")
 
 if __name__ == '__main__':
     main()
