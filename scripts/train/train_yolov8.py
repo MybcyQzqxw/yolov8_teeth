@@ -67,7 +67,6 @@ def main():
   python train.py -e 100                               # 仅指定训练轮数
   python train.py -m yolov8n -e 50                     # 小模型快速训练
   python train.py -m yolov8s -e 100 -b 32              # 中等规模训练
-  python train.py -m yolov8l -e 200 -b 16 --imgsz 1024 # 高精度训练
   python train.py -m yolov8x -b -1 --device 0          # 大模型自动批量大小
         """)
     
