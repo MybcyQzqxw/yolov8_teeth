@@ -4,7 +4,7 @@
 
 ## 项目结构
 
-```
+``` text
 yolov8_teeth/
 ├── README.md               # 项目说明文档
 ├── requirements.txt        # 项目依赖
@@ -51,7 +51,8 @@ pip install -r requirements.txt
 ### 2. 数据集准备
 
 使用 Dentalai 数据集，下载地址：
-https://datasetninja.com/dentalai
+
+<https://datasetninja.com/dentalai>
 
 将 `tar` 格式的压缩包下载到项目根目录下的 `datasets/dentalai` 文件夹中。
 
@@ -104,11 +105,13 @@ python scripts/train/train_yolov8.py --help
 - 日志记录: 开启
 
 ### 模型参数
+
 | 参数      | 简写 | 类型 | 默认值    | 说明     | 示例                                                  |
 | --------- | ---- | ---- | --------- | -------- | ----------------------------------------------------- |
 | `--model` | `-m` | str  | "yolov8m" | 模型类型 | `yolov8n`, `yolov8s`, `yolov8m`, `yolov8l`, `yolov8x` |
 
 ### 训练控制参数
+
 | 参数       | 简写 | 类型 | 默认值 | 说明         | 示例                         |
 | ---------- | ---- | ---- | ------ | ------------ | ---------------------------- |
 | `--epochs` | `-e` | int  | 30     | 训练轮数     | `-e 100`                     |
@@ -117,18 +120,21 @@ python scripts/train/train_yolov8.py --help
 | `--device` | -    | str  | "auto" | 训练设备     | `--device 0`, `--device cpu` |
 
 ### 数据和输出参数
+
 | 参数           | 简写 | 类型 | 默认值           | 说明       | 示例              |
 | -------------- | ---- | ---- | ---------------- | ---------- | ----------------- |
 | `--data_dir`   | `-d` | str  | "./yolo_dataset" | 数据集目录 | `-d ./my_dataset` |
 | `--output_dir` | `-o` | str  | "./outputs"      | 输出目录   | `-o ./results`    |
 
 ### 高级训练参数
+
 | 参数            | 类型 | 默认值 | 说明           | 示例              |
 | --------------- | ---- | ------ | -------------- | ----------------- |
 | `--patience`    | int  | 30     | 早停耐心值     | `--patience 50`   |
 | `--save_period` | int  | 10     | 保存检查点间隔 | `--save_period 5` |
 
 ### 输出控制参数
+
 | 参数        | 类型 | 默认值 | 说明             |
 | ----------- | ---- | ------ | ---------------- |
 | `--nolog`   | flag | False  | 禁用日志和可视化 |
@@ -138,7 +144,7 @@ python scripts/train/train_yolov8.py --help
 
 训练完成后会在 `outputs/` 目录生成：
 
-```
+```text
 outputs/
 └── train_yolov8n_50ep_2024_07_17_14_30_25/
     ├── weights/
@@ -149,7 +155,8 @@ outputs/
         └── training_analysis.png  # 训练分析图表
 ```
 
-### 训练分析图表包含：
+### 训练分析图表包含
+
 - 📈 **损失曲线**: Box Loss, Object Loss, Class Loss
 - 🎯 **精度指标**: Precision, Recall 曲线
 - 📊 **mAP指标**: mAP@0.5, mAP@0.5:0.95 可视化
@@ -157,19 +164,14 @@ outputs/
 
 ## 常见问题
 
-### Q: 如何选择合适的模型？
-- **yolov8n**: 速度最快，精度较低，适合实时检测
-- **yolov8s**: 速度和精度平衡，推荐入门使用
-- **yolov8m**: 中等精度，适合一般应用
-- **yolov8l**: 高精度，需要较多显存
-- **yolov8x**: 最高精度，需要大量显存和时间
-
 ### Q: 批量大小如何设置？
+
 - 根据显存大小调整: 8GB显存建议16-32
 - 使用 `-b -1` 让系统自动选择最大可用批量大小
 - 批量大小越大，训练越稳定，但需要更多显存
 
 ### Q: 训练设备如何选择？
+
 - `--device auto`: 自动选择最佳设备
 - `--device 0`: 使用第一块GPU
 - `--device cpu`: 使用CPU（速度较慢）
@@ -177,17 +179,20 @@ outputs/
 ## 主要功能
 
 ### 数据处理
+
 - 支持 `tar` 格式数据集自动解压
 - Supervisely 格式到 YOLO 格式的转换
 - 自动创建 train/val/test 数据分割
 
 ### 模型训练
+
 - 支持所有 YOLOv8 模型变体
 - 自动创建时间戳输出目录
 - 灵活的 batch 大小配置
 - 可选的日志和可视化输出
 
 ### 结果可视化
+
 - 损失曲线图（Box Loss、Object Loss、Class Loss）
 - 精度和召回率曲线
 - mAP 指标可视化
