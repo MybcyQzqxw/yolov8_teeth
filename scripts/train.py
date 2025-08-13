@@ -5,7 +5,7 @@ import torch
 from ultralytics import YOLO, settings
 
 # 将项目根目录添加到 sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from utils.visualization import plot_training_metrics
 from utils.file_utils import create_output_dirs, validate_files, ensure_model_extension, reorganize_training_outputs
