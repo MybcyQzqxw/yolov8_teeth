@@ -17,29 +17,6 @@ settings.update({
     'runs_dir': 'outputs'  # 设置运行输出目录
 })
 
-def ensure_models_directory():
-    """确保 models 目录存在，并清理根目录的模型文件"""
-    import os
-    import shutil
-    
-    # 确保 models 目录存在
-    models_dir = os.path.join(os.getcwd(), 'models')
-    os.makedirs(models_dir, exist_ok=True)
-    
-    # 检查并移动根目录下的 .pt 文件到 models 目录
-    root_pt_files = [f for f in os.listdir('.') if f.endswith('.pt')]
-    for pt_file in root_pt_files:
-        src_path = pt_file
-        dst_path = os.path.join('models', pt_file)
-        if not os.path.exists(dst_path):
-            print(f"📦 移动模型文件: {src_path} -> {dst_path}")
-            shutil.move(src_path, dst_path)
-        else:
-            print(f"🗑️ 删除重复模型文件: {src_path}")
-            os.remove(src_path)
-    
-    return models_dir
-
 def detect_device_with_user_prompt():
     """
     智能设备检测函数，自动检测GPU可用性并给出用户友好的提示
@@ -128,9 +105,6 @@ def main():
     
     args = parser.parse_args()
 
-    # 确保模型目录存在并清理根目录
-    ensure_models_directory()
-
     # 处理模型文件名
     model_file = ensure_model_extension(args.model)
     
@@ -189,11 +163,10 @@ def main():
             exist_ok=True,
             patience=args.patience,
             save_period=args.save_period,
-            verbose=args.verbose
+            verbose=args.verbose,
+            amp=False  # 禁用AMP以避免自动下载yolo11n.pt
         )
         
-        # 训练完成后清理根目录
-        ensure_models_directory()
     except ConnectionError as e:
         print(f"❌ 网络连接错误: {e}")
         print("💡 解决方案:")
