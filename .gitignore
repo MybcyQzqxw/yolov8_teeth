@@ -24,8 +24,9 @@ Thumbs.db
 *.pt
 
 # 忽略源数据集
-dataset/dentalai_dataset
+dataset/*
 # 但保留目录结构
+dataset/dentalai_dataset/*
 !dataset/dentalai_dataset/.gitkeep
 
 # 忽略处理后数据集
