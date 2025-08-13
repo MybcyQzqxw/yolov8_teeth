@@ -39,12 +39,13 @@ class PerClassMetrics:
             print(f"[!] 模型加载失败: {e}")
             return False
     
-    def evaluate_per_class(self, split='val'):
+    def evaluate_per_class(self, split='val', output_dir=None):
         """
         计算每类别的详细指标
         
         Args:
             split (str): 数据分割 ('train', 'val', 'test')
+            output_dir (str): 输出目录路径，如果指定则将验证结果保存到此目录
         
         Returns:
             dict: 每类别指标结果
@@ -56,7 +57,22 @@ class PerClassMetrics:
         try:
             # 运行验证评估
             print(f"[🔄] 正在评估 {split} 数据集...")
-            results = self.model.val(data=self.data_yaml_path, split=split, verbose=False)
+            
+            # 如果指定了输出目录，设置YOLOv8的输出路径
+            if output_dir:
+                # 确保输出目录存在
+                os.makedirs(output_dir, exist_ok=True)
+                # 设置project和name参数，让验证结果保存到指定目录
+                results = self.model.val(
+                    data=self.data_yaml_path, 
+                    split=split, 
+                    verbose=False,
+                    project=output_dir,
+                    name='validation',
+                    exist_ok=True
+                )
+            else:
+                results = self.model.val(data=self.data_yaml_path, split=split, verbose=False)
             
             # 提取每类别指标
             per_class_metrics = {}
@@ -322,9 +338,9 @@ def evaluate_and_visualize_per_class(model_path, data_yaml_path, class_names, ou
         # 创建评估器
         evaluator = PerClassMetrics(model_path, data_yaml_path, class_names)
         
-        # 评估验证集
+        # 评估验证集（将验证结果输出到指定目录）
         print("[🔄] 开始每类别指标评估...")
-        metrics = evaluator.evaluate_per_class('val')
+        metrics = evaluator.evaluate_per_class('val', output_dir=output_dir)
         
         if not metrics:
             print("[!] 每类别指标评估失败")
