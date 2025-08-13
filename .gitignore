@@ -15,7 +15,6 @@ ENV/
 # Ultralytics & YOLO specific
 # 忽略所有 .pt 文件，但 models 目录下的除外
 *.pt
-!models/*.pt
 
 # 忽略训练输出
 outputs/
@@ -26,7 +25,10 @@ runs/
 # 为了保留空目录结构，请在每个需要保留的空目录下手动创建一个 .gitkeep 文件
 # 例如: dataset/dentalai_dataset/.gitkeep
 dataset/
+# !dataset/dentalai_dataset/.gitkeep
+
 preprocessed_dataset/
+# !preprocessed_dataset/yolov8/.gitkeep
 
 # IDE / Editor specific
 .vscode/

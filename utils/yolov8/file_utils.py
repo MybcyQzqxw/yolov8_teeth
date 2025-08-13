@@ -56,19 +56,19 @@ def validate_files(model_file, data_yaml):
 
 def ensure_model_extension(model_name):
     """
-    确保模型名称包含.pt扩展名，并返回models文件夹中的完整路径
+    确保模型名称包含.pt扩展名，并返回models/yolov8文件夹中的完整路径
     
     Args:
         model_name (str): 模型名称
         
     Returns:
-        str: models文件夹中的完整模型文件路径
+        str: models/yolov8文件夹中的完整模型文件路径
     """
     # 确保模型名有.pt扩展名
     if not model_name.endswith('.pt'):
         model_name = model_name + '.pt'
     
-    # 返回models文件夹中的路径
-    models_dir = os.path.join(os.getcwd(), 'models')
+    # 返回models/yolov8文件夹中的路径
+    models_dir = os.path.join(os.getcwd(), 'models', 'yolov8')
     os.makedirs(models_dir, exist_ok=True)
     return os.path.join(models_dir, model_name)

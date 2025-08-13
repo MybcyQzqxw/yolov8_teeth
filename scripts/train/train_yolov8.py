@@ -10,11 +10,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 from utils.yolov8.visualization import plot_loss_curve
 from utils.yolov8.file_utils import create_output_dirs, validate_files, ensure_model_extension
 
-# 配置ultralytics将模型下载到models文件夹，数据集使用当前目录
+# 配置ultralytics将模型下载到models/yolov8文件夹，数据集使用当前目录
 settings.update({
-    'weights_dir': 'models',
+    'weights_dir': 'models/yolov8',
     'datasets_dir': '.',
-    'runs_dir': 'outputs'  # 设置运行输出目录
+    'runs_dir': 'outputs/yolov8'  # 设置运行输出目录
 })
 
 def detect_device_with_user_prompt():
@@ -88,8 +88,8 @@ def main():
     # 数据和输出
     parser.add_argument('--data_dir', '-d', type=str, default="./preprocessed_dataset/yolov8",
                         help="训练数据文件夹，包含 data.yaml (默认: ./preprocessed_dataset/yolov8)")
-    parser.add_argument('--output_dir', '-o', type=str, default="./outputs",
-                        help="输出目录 (默认: ./outputs)")
+    parser.add_argument('--output_dir', '-o', type=str, default="./outputs/yolov8",
+                        help="输出目录 (默认: ./outputs/yolov8)")
     
     # 训练选项
     parser.add_argument('--patience', type=int, default=30,
@@ -145,7 +145,7 @@ def main():
         print("🔄 正在初始化模型...")
         
         # 设置环境变量确保模型下载到正确位置
-        os.environ['YOLO_CONFIG_DIR'] = os.path.join(os.getcwd(), 'models')
+        os.environ['YOLO_CONFIG_DIR'] = os.path.join(os.getcwd(), 'models', 'yolov8')
         
         model = YOLO(model_file)
         print("✅ 模型初始化成功!")
