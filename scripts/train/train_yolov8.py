@@ -8,7 +8,7 @@ from ultralytics import YOLO, settings
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from utils.visualization import plot_loss_curve
-from utils.file_utils import create_output_dirs, validate_files, ensure_model_extension
+from utils.file_utils import create_output_dirs, validate_files, ensure_model_extension, reorganize_training_outputs
 from utils.metrics import plot_enhanced_metrics, generate_metrics_report
 from utils.per_class_evaluator import evaluate_and_visualize_per_class
 
@@ -117,10 +117,14 @@ def main():
     data_yaml = os.path.join(args.data_dir, "data.yaml")
     validate_files(model_file, data_yaml)
 
-    # 创建输出目录
-    base_dir, weights_dir, logs_dir = create_output_dirs(
+    # 创建新的输出目录结构
+    dirs = create_output_dirs(
         args.model, args.epochs, args.output_dir, enable_logs=not args.nolog
     )
+
+    # 向后兼容，提取主要目录路径
+    base_dir = dirs['base']
+    weights_dir = dirs['weights']  # 这将是临时的YOLOv8输出目录
 
     # 智能设备检测和用户提示
     if args.device == "auto":
@@ -151,21 +155,119 @@ def main():
         model = YOLO(model_file)
         print("✅ 模型初始化成功!")
         
-        print("🚀 开始训练...")
+        print(f"🚀 开始训练...")
         result = model.train(
             data=data_yaml,
             epochs=args.epochs,
             batch=args.batch,
             imgsz=args.imgsz,
             device=device,  # 使用智能检测的设备
-            project=base_dir,
-            name="weights",
+            project=base_dir,  # 使用base_dir作为临时训练目录
+            name="temp_weights",  # 临时名称
             exist_ok=True,
             patience=args.patience,
             save_period=args.save_period,
             verbose=args.verbose,
             amp=False  # 禁用AMP以避免自动下载yolo11n.pt
         )
+        
+        # 训练完成后重新组织输出结构
+        temp_weights_dir = os.path.join(base_dir, "temp_weights")
+        
+        if not args.nolog:
+            # 读取类别名称
+            import yaml
+            try:
+                with open(data_yaml, 'r', encoding='utf-8') as f:
+                    data_config = yaml.safe_load(f)
+                    class_names = data_config.get('names', ['Unknown'])
+            except:
+                class_names = ['Caries', 'Cavity', 'Crack', 'Tooth']  # 默认类别
+            
+            print("📊 开始生成完整的评估报告...")
+            
+            # 生成评估报告到临时logs目录
+            temp_logs_dir = os.path.join(base_dir, "logs")
+            os.makedirs(temp_logs_dir, exist_ok=True)
+            
+            # 检查results.csv文件位置
+            results_csv = os.path.join(temp_weights_dir, "results.csv")
+            
+            if os.path.exists(results_csv):
+                # 1. 生成传统的训练分析图表
+                traditional_plot_path = os.path.join(temp_logs_dir, "training_analysis.png")
+                plot_loss_curve(results_csv, traditional_plot_path)
+                
+                # 2. 生成增强的指标可视化图表
+                enhanced_plot_path = os.path.join(temp_logs_dir, "enhanced_metrics_analysis.png")
+                metrics = plot_enhanced_metrics(results_csv, enhanced_plot_path, class_names)
+                
+                # 3. 生成详细的指标报告
+                report_path = os.path.join(temp_logs_dir, "metrics_report.md")
+                generate_metrics_report(results_csv, class_names, report_path)
+                
+                # 4. 进行每类别详细评估
+                best_model_path = os.path.join(temp_weights_dir, "weights", "best.pt")
+                
+                if os.path.exists(best_model_path):
+                    print(f"🔍 开始每类别详细指标评估... (使用: {best_model_path})")
+                    per_class_metrics = evaluate_and_visualize_per_class(
+                        best_model_path, data_yaml, class_names, temp_logs_dir
+                    )
+                    
+                    # 5. 生成完整的评估数据CSV文件
+                    if per_class_metrics:
+                        evaluation_csv_path = os.path.join(temp_logs_dir, "complete_evaluation_metrics.csv")
+                        _save_complete_evaluation_csv(metrics, per_class_metrics, class_names, evaluation_csv_path)
+                        print(f"📋 完整评估数据已保存至: {evaluation_csv_path}")
+                else:
+                    per_class_metrics = None
+                    print(f"⚠️ 未找到best.pt模型文件: {best_model_path}")
+                
+                # 6. 重新组织所有文件到新结构
+                reorganize_training_outputs(temp_weights_dir, dirs, class_names)
+                
+                # 7. 清理临时目录
+                if os.path.exists(temp_weights_dir):
+                    import shutil
+                    shutil.rmtree(temp_weights_dir)
+                # 注意：不删除temp_logs_dir，因为它就是我们的目标logs目录
+                
+                print(f"✅ 训练完成! 模型和完整评估结果保存至: {base_dir}")
+                print(f"📊 新的输出结构:")
+                print(f"   📦 模型文件: {dirs['weights']}/")
+                print(f"   📈 训练过程: {dirs['logs']}/")  
+                print(f"   📊 结果分析: {dirs['analysis']}/")
+                print(f"   ⚙️  训练配置: {dirs['meta']}/")
+                
+                # 显示关键指标摘要
+                if 'metrics' in locals() and metrics:
+                    print(f"🎯 关键指标摘要:")
+                    print(f"   - F1-Score: {metrics.get('f1_score', 0):.3f}")
+                    print(f"   - Precision: {metrics.get('precision', 0):.3f}")
+                    print(f"   - Recall: {metrics.get('recall', 0):.3f}")
+                    print(f"   - mAP@0.5: {metrics.get('map50', 0):.3f}")
+                    print(f"   - IoU质量: {metrics.get('avg_iou_at_0.5', 0):.3f}")
+                    
+                # 显示每类别F1-Score摘要
+                if 'per_class_metrics' in locals() and per_class_metrics:
+                    print(f"🏆 每类别F1-Score:")
+                    for class_name, class_metrics in per_class_metrics.items():
+                        print(f"   - {class_name}: {class_metrics.get('f1_score', 0):.3f}")
+            else:
+                print(f"⚠️ 未找到训练结果文件: {results_csv}")
+                # 至少重新组织基本文件
+                reorganize_training_outputs(temp_weights_dir, dirs, class_names)
+                if os.path.exists(temp_weights_dir):
+                    import shutil
+                    shutil.rmtree(temp_weights_dir)
+        else:
+            # 即使禁用日志，也要重新组织基本文件结构
+            reorganize_training_outputs(temp_weights_dir, dirs, [])
+            if os.path.exists(temp_weights_dir):
+                import shutil
+                shutil.rmtree(temp_weights_dir)
+            print(f"✅ 训练完成! 模型保存至: {base_dir}")
         
     except ConnectionError as e:
         print(f"❌ 网络连接错误: {e}")
@@ -178,109 +280,6 @@ def main():
     except Exception as e:
         print(f"❌ 训练过程中出现错误: {e}")
         return
-
-    # 默认生成训练可视化图表（除非显式指定 --nolog）
-    if not args.nolog:
-        # YOLOv8可能在嵌套的weights目录中保存results.csv
-        results_csv = os.path.join(base_dir, "weights", "results.csv")
-        alt_results_csv = os.path.join(base_dir, "weights", "weights", "results.csv")
-        
-        # 检查results.csv文件位置
-        if os.path.exists(results_csv):
-            csv_path_to_use = results_csv
-        elif os.path.exists(alt_results_csv):
-            csv_path_to_use = alt_results_csv
-        else:
-            csv_path_to_use = None
-            
-        if csv_path_to_use:
-            # 读取类别名称
-            import yaml
-            try:
-                with open(data_yaml, 'r', encoding='utf-8') as f:
-                    data_config = yaml.safe_load(f)
-                    class_names = data_config.get('names', ['Unknown'])
-            except:
-                class_names = ['Caries', 'Cavity', 'Crack', 'Tooth']  # 默认类别
-            
-            print("📊 开始生成完整的评估报告...")
-            
-            # 1. 生成传统的训练分析图表
-            traditional_plot_path = os.path.join(logs_dir, "training_analysis.png")
-            plot_loss_curve(csv_path_to_use, traditional_plot_path)
-            
-            # 2. 生成增强的指标可视化图表
-            enhanced_plot_path = os.path.join(logs_dir, "enhanced_metrics_analysis.png")
-            metrics = plot_enhanced_metrics(csv_path_to_use, enhanced_plot_path, class_names)
-            
-            # 3. 生成详细的指标报告
-            report_path = os.path.join(logs_dir, "metrics_report.md")
-            generate_metrics_report(csv_path_to_use, class_names, report_path)
-            
-            # 4. 进行每类别详细评估并保存到CSV
-            # YOLOv8 创建嵌套的weights目录结构: project/name/weights/best.pt
-            best_model_path = os.path.join(base_dir, "weights", "weights", "best.pt")
-            # 备用路径，以防结构不同
-            alt_best_model_path = os.path.join(base_dir, "weights", "best.pt")
-            
-            # 检查模型文件是否存在
-            if os.path.exists(best_model_path):
-                model_path_to_use = best_model_path
-                print(f"🔍 开始每类别详细指标评估... (使用: {model_path_to_use})")
-            elif os.path.exists(alt_best_model_path):
-                model_path_to_use = alt_best_model_path
-                print(f"🔍 开始每类别详细指标评估... (使用: {model_path_to_use})")
-            else:
-                model_path_to_use = None
-                print("⚠️ 未找到best.pt模型文件，跳过每类别评估")
-                print(f"   🔍 查找路径1: {best_model_path}")
-                print(f"   🔍 查找路径2: {alt_best_model_path}")
-            
-            per_class_metrics = None
-            if model_path_to_use:
-                per_class_metrics = evaluate_and_visualize_per_class(
-                    model_path_to_use, data_yaml, class_names, logs_dir
-                )
-                
-                # 5. 生成完整的评估数据CSV文件
-                if per_class_metrics:
-                    evaluation_csv_path = os.path.join(logs_dir, "complete_evaluation_metrics.csv")
-                    _save_complete_evaluation_csv(metrics, per_class_metrics, class_names, evaluation_csv_path)
-                    print(f"📋 完整评估数据已保存至: {evaluation_csv_path}")
-            else:
-                print("⚠️ 未找到best.pt模型文件，跳过每类别评估")
-            
-            print(f"✅ 训练完成! 模型和完整评估结果保存至: {base_dir}")
-            print(f"📊 评估结果文件:")
-            print(f"   📈 训练曲线: {traditional_plot_path}")
-            print(f"   📊 增强分析: {enhanced_plot_path}")
-            print(f"   📋 整体报告: {report_path}")
-            
-            if per_class_metrics:
-                print(f"   🏷️  每类别图表: {os.path.join(logs_dir, 'per_class_metrics.png')}")
-                print(f"   📊 每类别报告: {os.path.join(logs_dir, 'per_class_report.md')}")
-                print(f"   📋 完整评估CSV: {os.path.join(logs_dir, 'complete_evaluation_metrics.csv')}")
-            
-            # 显示关键指标摘要
-            if metrics:
-                print(f"🎯 关键指标摘要:")
-                print(f"   - F1-Score: {metrics.get('f1_score', 0):.3f}")
-                print(f"   - Precision: {metrics.get('precision', 0):.3f}")
-                print(f"   - Recall: {metrics.get('recall', 0):.3f}")
-                print(f"   - mAP@0.5: {metrics.get('map50', 0):.3f}")
-                print(f"   - IoU质量: {metrics.get('avg_iou_at_0.5', 0):.3f}")
-                
-            # 显示每类别F1-Score摘要
-            if per_class_metrics:
-                print(f"🏆 每类别F1-Score:")
-                for class_name, class_metrics in per_class_metrics.items():
-                    print(f"   - {class_name}: {class_metrics.get('f1_score', 0):.3f}")
-        else:
-            print("⚠️ 未找到 results.csv，无法生成训练分析图表")
-            print(f"   🔍 查找路径1: {results_csv}")
-            print(f"   🔍 查找路径2: {alt_results_csv}")
-    else:
-        print(f"✅ 训练完成! 模型保存至: {base_dir}")
 
 
 def _save_complete_evaluation_csv(overall_metrics, per_class_metrics, class_names, save_path):
