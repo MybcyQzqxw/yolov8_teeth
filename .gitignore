@@ -35,6 +35,10 @@ preprocessed_datasets/*/*
 outputs/*/*
 !outputs/*/.gitkeep
 
+# 忽略测试输出，但保留目录结构
+test_results/*
+!test_results/.gitkeep
+
 # 忽略模型，但保留目录结构
 models/*
 !models/.gitkeep

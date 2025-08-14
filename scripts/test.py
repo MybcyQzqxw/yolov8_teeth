@@ -18,6 +18,7 @@ from matplotlib import rcParams
 import pandas as pd
 from ultralytics import YOLO
 import yaml
+from datetime import datetime
 
 # 将项目根目录添加到 sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -514,8 +515,10 @@ def main():
     
     print(f"🎯 使用模型: {model_path}")
     
-    # 创建输出目录
-    os.makedirs(args.output_dir, exist_ok=True)
+    # 创建带时间戳的输出目录
+    timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    timestamped_output_dir = os.path.join(args.output_dir, f"test_{timestamp}")
+    os.makedirs(timestamped_output_dir, exist_ok=True)
     
     # 设置随机种子
     random.seed(42)
@@ -524,28 +527,28 @@ def main():
     print(f"🚀 开始测试 YOLOv8 牙齿检测模型")
     print(f"   📦 模型文件: {model_path}")
     print(f"   📁 数据配置: {data_yaml}")
-    print(f"   💾 输出目录: {args.output_dir}")
+    print(f"   💾 输出目录: {timestamped_output_dir}")
     print(f"   🎨 可视化样本: {args.samples}")
     print(f"   🎯 置信度阈值: {args.conf_threshold}")
     
     try:
         # 运行测试评估
-        metrics = run_test_evaluation(model_path, data_yaml, args.output_dir)
+        metrics = run_test_evaluation(model_path, data_yaml, timestamped_output_dir)
         
         if metrics:
             # 保存测试结果
-            results_file = os.path.join(args.output_dir, 'test_results.json')
+            results_file = os.path.join(timestamped_output_dir, 'test_results.json')
             import json
             with open(results_file, 'w', encoding='utf-8') as f:
                 json.dump(metrics, f, indent=2, ensure_ascii=False)
             print(f"[✓] 测试结果已保存至: {results_file}")
             
             # 生成测试报告
-            report_file = os.path.join(args.output_dir, 'test_report.md')
+            report_file = os.path.join(timestamped_output_dir, 'test_report.md')
             generate_test_report(metrics, model_path, data_yaml, report_file)
             print(f"[✓] 测试报告已保存至: {report_file}")
             
-            print(f"\n✅ 测试完成! 结果保存至: {args.output_dir}")
+            print(f"\n✅ 测试完成! 结果保存至: {timestamped_output_dir}")
             print(f"📊 关键指标:")
             print(f"   - F1-Score: {metrics['f1_score']:.4f}")
             print(f"   - 精确率: {metrics['precision']:.4f}")
