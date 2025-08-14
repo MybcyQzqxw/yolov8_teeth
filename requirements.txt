@@ -8,11 +8,14 @@ pandas>=1.5.0
 matplotlib>=3.5.0
 seaborn>=0.11.0
 
+# Computer vision and image processing
+opencv-python>=4.5.0
+
 # Machine learning metrics
 scikit-learn>=1.0.0
 
 # YAML support (already included with ultralytics but explicitly listed)
 PyYAML>=6.0
 
-# Note: OpenCV, Pillow, NumPy, tqdm, requests 
+# Note: Pillow, NumPy, tqdm, requests 
 # are automatically installed as ultralytics dependencies
