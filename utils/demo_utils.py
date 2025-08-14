@@ -16,6 +16,29 @@ from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 
 
+def find_data_yaml(image_path: str) -> str:
+    """
+    根据图片路径自动查找对应的data.yaml文件
+    
+    Args:
+        image_path: 图片文件路径
+        
+    Returns:
+        data.yaml文件路径
+    """
+    from pathlib import Path
+    
+    image_path = Path(image_path)
+    
+    # 向上查找包含data.yaml的目录
+    for parent in image_path.parents:
+        data_yaml_path = parent / "data.yaml"
+        if data_yaml_path.exists():
+            return str(data_yaml_path)
+    
+    raise FileNotFoundError(f"未找到data.yaml文件，请检查图片路径: {image_path}")
+
+
 class DentalDetectionDemo:
     """牙齿检测演示类"""
     
@@ -52,16 +75,16 @@ class DentalDetectionDemo:
             raise FileNotFoundError(f"数据配置文件不存在: {self.data_yaml}")
         
         # 加载模型
-        print("🔄 正在加载模型...")
+        print("正在加载模型...")
         self.model = YOLO(self.model_path)
-        print("✅ 模型加载成功!")
+        print("模型加载成功!")
         
         # 读取类别名称
         with open(self.data_yaml, 'r', encoding='utf-8') as f:
             data_config = yaml.safe_load(f)
             self.class_names = data_config.get('names', ['Caries', 'Cavity', 'Crack', 'Tooth'])
         
-        print(f"📋 类别名称: {self.class_names}")
+        print(f"类别名称: {self.class_names}")
     
     def get_available_images(self, test_dir: str, max_count: int = 20) -> List[Path]:
         """
@@ -297,12 +320,12 @@ class DentalDetectionDemo:
         
         # 1. 原始图像
         axes[0].imshow(image)
-        axes[0].set_title('🖼️ 原始图像', fontsize=16, fontweight='bold', pad=20)
+        axes[0].set_title('原始图像', fontsize=16, fontweight='bold', pad=20)
         axes[0].axis('off')
         
         # 2. 真实标签
         axes[1].imshow(image)
-        axes[1].set_title(f'🏷️ 真实标签 ({len(gt_labels)} 个)', fontsize=16, fontweight='bold', 
+        axes[1].set_title(f'真实标签 ({len(gt_labels)} 个)', fontsize=16, fontweight='bold', 
                          pad=20, color='darkgreen')
         axes[1].axis('off')
         
@@ -324,7 +347,7 @@ class DentalDetectionDemo:
         
         # 3. 预测结果
         axes[2].imshow(image)
-        axes[2].set_title(f'🎯 预测结果 ({len(predictions)} 个)', fontsize=16, fontweight='bold',
+        axes[2].set_title(f'预测结果 ({len(predictions)} 个)', fontsize=16, fontweight='bold',
                          pad=20, color='darkred')
         axes[2].axis('off')
         
@@ -349,18 +372,18 @@ class DentalDetectionDemo:
     def _print_analysis(self, analysis: Dict):
         """打印分析结果"""
         print("\n" + "="*70)
-        print("🔍 检测结果分析:")
+        print("检测结果分析:")
         print("="*70)
-        print(f"✅ 真实标签: {analysis['total_gt']} 个")
-        print(f"🎯 预测结果: {analysis['total_pred']} 个")
-        print(f"🎉 成功匹配: {analysis['matched_gt_count']} 个")
-        print(f"❌ 漏检 (FN): {analysis['false_negatives']} 个") 
-        print(f"⚠️  误检 (FP): {analysis['false_positives']} 个")
+        print(f"真实标签: {analysis['total_gt']} 个")
+        print(f"预测结果: {analysis['total_pred']} 个")
+        print(f"成功匹配: {analysis['matched_gt_count']} 个")
+        print(f"漏检 (FN): {analysis['false_negatives']} 个") 
+        print(f"误检 (FP): {analysis['false_positives']} 个")
         
         if analysis['matches']:
-            print(f"\n🔗 匹配详情:")
+            print(f"\n匹配详情:")
             for match in analysis['matches']:
-                print(f"   ✅ GT-{match['gt_idx']+1} ({match['gt_class']}) ↔ "
+                print(f"   GT-{match['gt_idx']+1} ({match['gt_class']}) <-> "
                       f"Pred-{match['pred_idx']+1} ({match['pred_class']}, "
                       f"{match['confidence']:.2f}) | IoU: {match['iou']:.3f}")
     
@@ -368,7 +391,7 @@ class DentalDetectionDemo:
         """显示图片选择器"""
         images = self.get_available_images(test_dir)
         if not images:
-            print(f"❌ 在 {test_dir} 中未找到测试图片")
+            print(f"错误: 在 {test_dir} 中未找到测试图片")
             return []
         
         print(f"📸 可选择的测试图片 (共 {len(images)} 张):")
