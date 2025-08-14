@@ -19,6 +19,110 @@ settings.update({
     'runs_dir': 'outputs/dentalai'  # 设置运行输出目录
 })
 
+def find_latest_checkpoint(output_dir):
+    """
+    在输出目录中查找最新的训练检查点
+    
+    Args:
+        output_dir (str): 输出目录路径
+        
+    Returns:
+        tuple: (checkpoint_path, training_dir) 或 (None, None)
+    """
+    if not os.path.exists(output_dir):
+        return None, None
+    
+    # 查找所有训练目录（按时间戳命名）
+    train_dirs = []
+    for item in os.listdir(output_dir):
+        item_path = os.path.join(output_dir, item)
+        if os.path.isdir(item_path) and item.startswith('train_'):
+            train_dirs.append((item, item_path))
+    
+    if not train_dirs:
+        return None, None
+    
+    # 按时间戳排序，取最新的
+    train_dirs.sort(key=lambda x: x[0], reverse=True)
+    latest_dir = train_dirs[0][1]
+    
+    # 检查是否存在检查点文件
+    possible_checkpoints = [
+        os.path.join(latest_dir, "weights", "last.pt"),
+        os.path.join(latest_dir, "temp_weights", "weights", "last.pt"),
+        os.path.join(latest_dir, "temp_weights", "last.pt")
+    ]
+    
+    for checkpoint in possible_checkpoints:
+        if os.path.exists(checkpoint):
+            return checkpoint, latest_dir
+    
+    return None, None
+
+
+def setup_resume_training(args):
+    """
+    设置断点续训相关的配置
+    
+    Args:
+        args: 命令行参数
+        
+    Returns:
+        tuple: (resume_path, output_dir, is_resuming)
+    """
+    is_resuming = False
+    resume_path = None
+    output_dir = None
+    
+    if args.resume or args.resume_dir:
+        # 处理指定续训目录的情况
+        if args.resume_dir:
+            if not os.path.exists(args.resume_dir):
+                raise ValueError(f"指定的续训目录不存在: {args.resume_dir}")
+            
+            # 查找检查点
+            possible_checkpoints = [
+                os.path.join(args.resume_dir, "weights", "last.pt"),
+                os.path.join(args.resume_dir, "temp_weights", "weights", "last.pt"),
+                os.path.join(args.resume_dir, "temp_weights", "last.pt")
+            ]
+            
+            for checkpoint in possible_checkpoints:
+                if os.path.exists(checkpoint):
+                    resume_path = checkpoint
+                    output_dir = args.resume_dir
+                    is_resuming = True
+                    break
+            
+            if not resume_path:
+                raise ValueError(f"在指定目录中未找到有效的检查点文件: {args.resume_dir}")
+        
+        # 处理resume参数的情况
+        elif args.resume:
+            if args.resume == "auto":
+                # 自动查找最新检查点
+                checkpoint, train_dir = find_latest_checkpoint(args.output_dir)
+                if checkpoint:
+                    resume_path = checkpoint
+                    output_dir = train_dir
+                    is_resuming = True
+                else:
+                    print("⚠️ 未找到可续训的检查点，将开始新的训练")
+            elif os.path.isfile(args.resume):
+                # 直接指定检查点文件
+                resume_path = args.resume
+                # 尝试从检查点路径推断输出目录
+                if "temp_weights" in resume_path:
+                    output_dir = os.path.dirname(os.path.dirname(resume_path))
+                else:
+                    output_dir = os.path.dirname(os.path.dirname(resume_path))
+                is_resuming = True
+            else:
+                raise ValueError(f"指定的检查点文件不存在: {args.resume}")
+    
+    return resume_path, output_dir, is_resuming
+
+
 def detect_device_with_user_prompt():
     """
     智能设备检测函数，自动检测GPU可用性并给出用户友好的提示
@@ -98,6 +202,12 @@ def main():
     parser.add_argument('--save_period', type=int, default=10,
                         help="保存检查点的间隔轮数 (默认: 10)")
     
+    # 断点续训选项
+    parser.add_argument('--resume', type=str, default=None,
+                        help="断点续训: 'auto' 自动从最新检查点恢复，或指定检查点路径")
+    parser.add_argument('--resume_dir', type=str, default=None,
+                        help="指定续训的输出目录路径")
+    
     # 输出控制
     parser.add_argument('--nolog', action='store_true',
                         help="禁用日志输出和可视化图表")
@@ -117,10 +227,30 @@ def main():
     data_yaml = os.path.join(args.data_dir, "data.yaml")
     validate_files(model_file, data_yaml)
 
-    # 创建新的输出目录结构
-    dirs = create_output_dirs(
-        args.model, args.epochs, args.output_dir, enable_logs=not args.nolog
-    )
+    # 设置断点续训
+    resume_path, resume_output_dir, is_resuming = setup_resume_training(args)
+    
+    if is_resuming:
+        print(f"🔄 检测到续训模式")
+        print(f"   📁 续训目录: {resume_output_dir}")
+        print(f"   💾 检查点文件: {resume_path}")
+        base_dir = resume_output_dir
+        dirs = {
+            'base': base_dir,
+            'weights': os.path.join(base_dir, "weights"),
+            'logs': os.path.join(base_dir, "logs"),
+            'logs_records': os.path.join(base_dir, "logs", "records"),
+            'analysis': os.path.join(base_dir, "analysis"), 
+            'meta': os.path.join(base_dir, "meta")
+        }
+        # 确保目录存在
+        for dir_path in dirs.values():
+            os.makedirs(dir_path, exist_ok=True)
+    else:
+        # 创建新的输出目录结构
+        dirs = create_output_dirs(
+            args.model, args.epochs, args.output_dir, enable_logs=not args.nolog
+        )
 
     # 向后兼容，提取主要目录路径
     base_dir = dirs['base']
@@ -152,24 +282,51 @@ def main():
         # 设置环境变量确保模型下载到正确位置
         os.environ['YOLO_CONFIG_DIR'] = os.path.join(os.getcwd(), 'models')
         
-        model = YOLO(model_file)
+        if is_resuming:
+            print(f"📂 从检查点续训: {resume_path}")
+            # 续训时直接加载检查点文件
+            model = YOLO(resume_path)
+        else:
+            # 正常训练时加载预训练模型
+            model = YOLO(model_file)
+        
         print("✅ 模型初始化成功!")
         
         print(f"🚀 开始训练...")
-        result = model.train(
-            data=data_yaml,
-            epochs=args.epochs,
-            batch=args.batch,
-            imgsz=args.imgsz,
-            device=device,  # 使用智能检测的设备
-            project=base_dir,  # 使用base_dir作为临时训练目录
-            name="temp_weights",  # 临时名称
-            exist_ok=True,
-            patience=args.patience,
-            save_period=args.save_period,
-            verbose=args.verbose,
-            amp=False  # 禁用AMP以避免自动下载yolo11n.pt
-        )
+        if is_resuming:
+            # 续训模式：从检查点开始新的训练（迁移学习方式）
+            print(f"   🔄 使用检查点权重进行迁移训练")
+            result = model.train(
+                data=data_yaml,
+                epochs=args.epochs,  # 明确指定总epoch数
+                batch=args.batch,
+                imgsz=args.imgsz,
+                device=device,
+                project=base_dir,
+                name="temp_weights",
+                exist_ok=True,
+                patience=args.patience,
+                save_period=args.save_period,
+                verbose=args.verbose,
+                amp=False
+                # 不使用resume参数，而是基于检查点权重进行新的训练
+            )
+        else:
+            # 正常训练模式
+            result = model.train(
+                data=data_yaml,
+                epochs=args.epochs,
+                batch=args.batch,
+                imgsz=args.imgsz,
+                device=device,  # 使用智能检测的设备
+                project=base_dir,  # 使用base_dir作为临时训练目录
+                name="temp_weights",  # 临时名称
+                exist_ok=True,
+                patience=args.patience,
+                save_period=args.save_period,
+                verbose=args.verbose,
+                amp=False  # 禁用AMP以避免自动下载yolo11n.pt
+            )
         
         # 训练完成后重新组织输出结构
         temp_weights_dir = os.path.join(base_dir, "temp_weights")
