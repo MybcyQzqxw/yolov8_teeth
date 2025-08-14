@@ -387,6 +387,55 @@ class DentalDetectionDemo:
                       f"Pred-{match['pred_idx']+1} ({match['pred_class']}, "
                       f"{match['confidence']:.2f}) | IoU: {match['iou']:.3f}")
     
+    def predict_only(self, image_path: str):
+        """仅进行预测，不需要真实标签对比"""
+        image_path = Path(image_path)
+        
+        # 加载图片
+        image = cv2.imread(str(image_path))
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        # 模型预测
+        predictions = self.predict_image(str(image_path))
+        
+        print(f"\n预测结果: 检测到 {len(predictions)} 个目标")
+        
+        # 可视化预测结果
+        fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+        
+        ax.imshow(image_rgb)
+        ax.set_title(f'预测结果 ({len(predictions)} 个)', fontsize=18, fontweight='bold',
+                    pad=20, color='darkred')
+        ax.axis('off')
+        
+        TEXT_BG = dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.8)
+        
+        for i, pred in enumerate(predictions):
+            x_min, y_min, x_max, y_max = pred['bbox']
+            
+            # 绘制预测框
+            rect = patches.Rectangle(
+                (x_min, y_min), x_max - x_min, y_max - y_min,
+                linewidth=3, edgecolor=self.PRED_COLOR, facecolor='none', alpha=0.8
+            )
+            ax.add_patch(rect)
+            
+            # 添加标签
+            ax.text(x_min, y_min - 10, 
+                   f"Pred-{i+1}: {pred['class_name']} ({pred['confidence']:.2f})", 
+                   fontsize=12, color=self.PRED_TEXT_COLOR, fontweight='bold', bbox=TEXT_BG)
+        
+        plt.tight_layout()
+        plt.show()
+        
+        # 打印预测详情
+        if predictions:
+            print("\n预测详情:")
+            for i, pred in enumerate(predictions):
+                print(f"   Pred-{i+1}: {pred['class_name']} (置信度: {pred['confidence']:.2f})")
+        else:
+            print("未检测到任何目标")
+    
     def show_image_selector(self, test_dir: str):
         """显示图片选择器"""
         images = self.get_available_images(test_dir)
@@ -394,7 +443,7 @@ class DentalDetectionDemo:
             print(f"错误: 在 {test_dir} 中未找到测试图片")
             return []
         
-        print(f"📸 可选择的测试图片 (共 {len(images)} 张):")
+        print(f"可选择的测试图片 (共 {len(images)} 张):")
         for i, img_path in enumerate(images):
             print(f"   {i+1:2d}. {img_path.name}")
         
