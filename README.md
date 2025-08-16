@@ -83,7 +83,7 @@ pip install -r requirements.txt
 
 ### 2. 数据集准备
 
-（1）Dentalai 数据集
+（1）dentalai 数据集
 
 下载地址：<https://datasetninja.com/dentalai>
 
@@ -97,7 +97,26 @@ python scripts/data_preprocessing/dentalai/dataset_extract.py
 python scripts/data_preprocessing/dentalai/dataset_convert.py
 ```
 
-（2）。。。
+（2）dentalx 数据集
+
+下载地址：<https://zenodo.org/records/7812323#.ZDQE1uxBwUG>
+
+将压缩包：
+
+- `training_data.zip`
+- `validation_data.zip`
+
+下载到项目根目录下的 `datasets/dentalx` 文件夹中。
+
+```bash
+# 解压数据集
+python scripts/data_preprocessing/dentalx/dataset_extract.py
+
+# 转换为 YOLO 格式（专门用于疾病检测，按7:2:1比例划分训练:验证:测试集）
+python scripts/data_preprocessing/dentalx/dataset_convert.py
+```
+
+**注意**: dentalx转换脚本专门处理疾病检测任务，只使用 `quadrant-enumeration-disease` 变体，包含4个疾病类别：Impacted、Caries、Periapical Lesion、Deep Caries。数据集共705张图像，按7:2:1比例划分为493张训练集、141张验证集、71张测试集。
 
 ### 3. 训练模型
 
