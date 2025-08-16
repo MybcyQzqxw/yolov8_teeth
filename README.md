@@ -118,6 +118,26 @@ python scripts/data_preprocessing/dentalx/dataset_convert.py
 
 **注意**: dentalx转换脚本专门处理疾病检测任务，只使用 `quadrant-enumeration-disease` 变体，包含4个疾病类别：Impacted、Caries、Periapical Lesion、Deep Caries。数据集共705张图像，按7:2:1比例划分为493张训练集、141张验证集、71张测试集。
 
+（3）OralXrays-9 数据集（X光片）
+
+下载地址：<https://drive.google.com/drive/folders/1_y7ERcFicnOYY2DMR6Qe1W4KGdCsoQ1n?usp=drive_link>
+
+将压缩包：
+
+- `annotations.zip`
+- `train2017.zip`
+- `val2017.zip`
+
+下载到项目根目录下的 `datasets/OralXrays-9` 文件夹中。
+
+```bash
+# 解压数据集
+python scripts/data_preprocessing/OralXrays-9/dataset_extract.py
+
+# 转换为 YOLO 格式
+python scripts/data_preprocessing/OralXrays-9/dataset_convert.py
+```
+
 ### 3. 训练模型
 
 ``` bash
@@ -134,10 +154,15 @@ python scripts/train.py -data_dir ./preprocessed_datasets/dentalai -output_dir .
 python scripts/train.py -d ./preprocessed_datasets/dentalai -o ./outputs/dentalai
 
 # 完整参数示例
+
 # （1）dentalai 数据集（照片）
-python scripts/train.py -m yolov8n -e 1 -b -1 -d ./preprocessed_datasets/dentalai -o ./outputs/dentalai
+python scripts/train.py -m yolov8m -e 1 -b -1 -d ./preprocessed_datasets/dentalai -o ./outputs/dentalai
+
 # （2）dentalx 数据集（X光片）
-python scripts/train.py -m yolov8n -e 1 -b -1 -d ./preprocessed_datasets/dentalx -o ./outputs/dentalx
+python scripts/train.py -m yolov8m -e 1 -b -1 -d ./preprocessed_datasets/dentalx -o ./outputs/dentalx
+
+# （3）OralXrays-9 数据集（X光片）
+python scripts/train.py -m yolov8m -e 1 -b -1 -d ./preprocessed_datasets/OralXrays-9 -o ./outputs/OralXrays-9
 
 # 查看帮助信息
 python scripts/train.py --help
@@ -291,11 +316,16 @@ python scripts/train.py --resume_dir ./outputs/dentalai/train_yolov8m_30ep_2025_
 训练完成后，使用 `scripts/test.py` 对模型进行全面评估和可视化分析。
 
 ```bash
+# 完整参数示例
+
 # （1）dentalai 数据集
 python scripts/test.py --model ./outputs/dentalai/train_yolov8m_1ep_2025_08_14_12_35_22/weights/best.pt -d preprocessed_datasets/dentalai/data.yaml
 
 # （2）dentalx 数据集
-python scripts/test.py --model ./outputs/dentalx/train_yolov8m_1ep_2025_08_16_10_24_33/weights/best.pt -d preprocessed_datasets/dentalx/data.yaml
+python scripts/test.py --model ./outputs/dentalx/train_yolov8m_1ep_2025_08_16_12_19_12/weights/best.pt -d preprocessed_datasets/dentalx/data.yaml
+
+# （3）OralXrays-9 数据集
+python scripts/test.py --model ./outputs/OralXrays-9/train_yolov8m_1ep_2025_08_16_12_19_12/weights/best.pt -d preprocessed_datasets/OralXrays-9/data.yaml
 ```
 
 ### 📋 测试参数
