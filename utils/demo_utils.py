@@ -42,13 +42,13 @@ def find_data_yaml(image_path: str) -> str:
 class DentalDetectionDemo:
     """牙齿检测演示类"""
     
-    def __init__(self, model_path: str, data_yaml: str):
+    def __init__(self, model_path: str, data_yaml: Optional[str] = None):
         """
         初始化演示类
         
         Args:
             model_path: 模型文件路径
-            data_yaml: 数据配置文件路径
+            data_yaml: 数据配置文件路径（可选，仅在需要类别信息或标签对比时使用）
         """
         self.model_path = model_path
         self.data_yaml = data_yaml
@@ -68,23 +68,29 @@ class DentalDetectionDemo:
     
     def _load_model_and_config(self):
         """加载模型和配置"""
-        # 检查文件存在性
+        # 检查模型文件存在性
         if not os.path.exists(self.model_path):
             raise FileNotFoundError(f"模型文件不存在: {self.model_path}")
-        if not os.path.exists(self.data_yaml):
-            raise FileNotFoundError(f"数据配置文件不存在: {self.data_yaml}")
         
         # 加载模型
         print("正在加载模型...")
         self.model = YOLO(self.model_path)
         print("模型加载成功!")
         
-        # 读取类别名称
-        with open(self.data_yaml, 'r', encoding='utf-8') as f:
-            data_config = yaml.safe_load(f)
-            self.class_names = data_config.get('names', ['Caries', 'Cavity', 'Crack', 'Tooth'])
-        
-        print(f"类别名称: {self.class_names}")
+        # 如果提供了数据配置文件，则读取类别名称
+        if self.data_yaml:
+            if not os.path.exists(self.data_yaml):
+                raise FileNotFoundError(f"数据配置文件不存在: {self.data_yaml}")
+            
+            with open(self.data_yaml, 'r', encoding='utf-8') as f:
+                data_config = yaml.safe_load(f)
+                self.class_names = data_config.get('names', ['Class_0', 'Class_1', 'Class_2', 'Class_3'])
+            
+            print(f"类别名称: {self.class_names}")
+        else:
+            # 如果没有提供配置文件，使用默认类别名称
+            self.class_names = ['Class_0', 'Class_1', 'Class_2', 'Class_3']
+            print("未提供数据配置文件，使用默认类别名称")
     
     def get_available_images(self, test_dir: str, max_count: int = 20) -> List[Path]:
         """
@@ -203,6 +209,75 @@ class DentalDetectionDemo:
         
         return inter_area / union_area if union_area > 0 else 0.0
     
+    def match_predictions_with_ground_truth(self, gt_labels: List[List[float]], predictions: List[Dict], 
+                                          image_shape: tuple, iou_threshold: float = 0.5) -> Dict:
+        """
+        匹配预测结果与真实标签
+        
+        Args:
+            gt_labels: 真实标签列表 (YOLO格式)
+            predictions: 预测结果列表
+            image_shape: 图像形状 (height, width)
+            iou_threshold: IoU阈值
+            
+        Returns:
+            匹配分析结果
+        """
+        img_height, img_width = image_shape
+        
+        # 转换真实标签为像素坐标
+        gt_boxes = []
+        for label in gt_labels:
+            class_id, x_center, y_center, width, height = label
+            x_min, y_min, x_max, y_max = self.denormalize_bbox([x_center, y_center, width, height], img_width, img_height)
+            gt_boxes.append([x_min, y_min, x_max, y_max])
+        
+        matched_gt = set()
+        matched_pred = set()
+        matches = []
+        
+        # 为每个真实标签找最佳匹配的预测
+        for i, gt_box in enumerate(gt_boxes):
+            best_iou = 0
+            best_pred_idx = -1
+            
+            for j, pred in enumerate(predictions):
+                if j in matched_pred:
+                    continue
+                    
+                pred_box = pred['bbox']
+                iou = self.calculate_iou(gt_box, pred_box)
+                
+                if iou > best_iou:
+                    best_iou = iou
+                    best_pred_idx = j
+            
+            if best_iou > iou_threshold:
+                matched_gt.add(i)
+                matched_pred.add(best_pred_idx)
+                gt_class = self.class_names[int(gt_labels[i][0])]
+                pred_class = predictions[best_pred_idx]['class_name']
+                conf = predictions[best_pred_idx]['confidence']
+                
+                matches.append({
+                    'gt_idx': i,
+                    'pred_idx': best_pred_idx,
+                    'gt_class': gt_class,
+                    'pred_class': pred_class,
+                    'confidence': conf,
+                    'iou': best_iou
+                })
+        
+        return {
+            'matches': matches,
+            'matched_gt_count': len(matched_gt),
+            'matched_pred_count': len(matched_pred),
+            'total_gt': len(gt_labels),
+            'total_pred': len(predictions),
+            'false_negatives': len(gt_labels) - len(matched_gt),
+            'false_positives': len(predictions) - len(matched_pred)
+        }
+    
     def analyze_detection_results(self, gt_labels: List[List[float]], predictions: List[Dict], 
                                 img_width: int, img_height: int, iou_threshold: float = 0.5) -> Dict:
         """
@@ -269,13 +344,14 @@ class DentalDetectionDemo:
             'false_positives': len(predictions) - len(matched_pred)
         }
     
-    def visualize_detection(self, image_path: str, save_path: Optional[str] = None) -> Dict:
+    def visualize_detection(self, image_path: str, save_path: Optional[str] = None, show_ground_truth: bool = True) -> Dict:
         """
         完整的检测可视化流程
         
         Args:
             image_path: 图像路径
             save_path: 保存路径（可选）
+            show_ground_truth: 是否显示真实标签（需要data_yaml）
             
         Returns:
             检测分析结果
@@ -288,10 +364,87 @@ class DentalDetectionDemo:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         img_height, img_width = image.shape[:2]
         
-        # 加载真实标签
-        image_name = os.path.splitext(os.path.basename(image_path))[0]
-        label_dir = os.path.dirname(image_path).replace('images', 'labels')
-        label_path = os.path.join(label_dir, f"{image_name}.txt")
+        # 获取预测结果
+        predictions = self.predict_image(image_path)
+        
+        result = {
+            'image_shape': (img_height, img_width),
+            'predictions': predictions,
+            'ground_truth': [],
+            'analysis': {}
+        }
+        
+        # 如果需要显示真实标签且提供了配置文件
+        if show_ground_truth and self.data_yaml:
+            # 加载真实标签
+            image_name = os.path.splitext(os.path.basename(image_path))[0]
+            label_dir = os.path.dirname(image_path).replace('images', 'labels')
+            label_path = os.path.join(label_dir, f"{image_name}.txt")
+            
+            gt_labels = []
+            if os.path.exists(label_path):
+                gt_labels = self.load_ground_truth_labels(label_path)
+                result['ground_truth'] = gt_labels
+                
+                # 匹配真实标签和预测结果
+                analysis = self.match_predictions_with_ground_truth(gt_labels, predictions, image.shape[:2])
+                result['analysis'] = analysis
+        elif show_ground_truth and not self.data_yaml:
+            print("警告: 未提供数据配置文件，无法显示真实标签")
+        
+        # 创建可视化
+        plt.figure(figsize=(15, 10))
+        plt.imshow(image)
+        plt.axis('off')
+        
+        # 绘制预测结果
+        for pred in predictions:
+            x_min, y_min, x_max, y_max = pred['bbox']
+            confidence = pred['confidence']
+            class_name = pred['class_name']
+            
+            rect = plt.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min,
+                               linewidth=2, edgecolor='red', facecolor='none', alpha=0.8)
+            plt.gca().add_patch(rect)
+            
+            label = f"{class_name}: {confidence:.2f}"
+            plt.text(x_min, y_min - 5, label, bbox=dict(boxstyle="round,pad=0.3", facecolor='red', alpha=0.7),
+                    fontsize=10, color='white', weight='bold')
+        
+        # 如果有真实标签，绘制它们
+        if show_ground_truth and self.data_yaml and result['ground_truth']:
+            for gt in result['ground_truth']:
+                class_id, x_center, y_center, width, height = gt
+                x_min, y_min, x_max, y_max = self.denormalize_bbox(gt[1:], img_width, img_height)
+                class_name = self.class_names[int(class_id)] if int(class_id) < len(self.class_names) else f'Class_{int(class_id)}'
+                
+                rect = plt.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min,
+                                   linewidth=2, edgecolor='green', facecolor='none', alpha=0.8, linestyle='--')
+                plt.gca().add_patch(rect)
+                
+                plt.text(x_max, y_max + 15, f"GT: {class_name}", 
+                        bbox=dict(boxstyle="round,pad=0.3", facecolor='green', alpha=0.7),
+                        fontsize=10, color='white', weight='bold')
+        
+        plt.title(f"检测结果: {os.path.basename(image_path)}", fontsize=14, weight='bold')
+        
+        # 添加图例
+        if show_ground_truth and self.data_yaml and result['ground_truth']:
+            legend_elements = [
+                plt.Line2D([0], [0], color='red', lw=2, label='预测结果'),
+                plt.Line2D([0], [0], color='green', lw=2, linestyle='--', label='真实标签')
+            ]
+            plt.legend(handles=legend_elements, loc='upper right')
+        
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
+            print(f"结果保存到: {save_path}")
+        
+        plt.show()
+        
+        return result
         gt_labels = self.load_ground_truth_labels(label_path)
         
         # 模型预测
@@ -369,6 +522,68 @@ class DentalDetectionDemo:
         # 打印分析结果
         self._print_analysis(analysis)
     
+    def predict_only(self, image_path: str, save_path: Optional[str] = None, conf_threshold: float = 0.3) -> Dict:
+        """
+        仅进行预测的方法，不需要真实标签
+        
+        Args:
+            image_path: 图像路径
+            save_path: 保存路径（可选）
+            conf_threshold: 置信度阈值
+            
+        Returns:
+            预测结果
+        """
+        # 读取图像
+        image = cv2.imread(image_path)
+        if image is None:
+            raise ValueError(f"无法读取图像: {image_path}")
+        
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        img_height, img_width = image.shape[:2]
+        
+        # 获取预测结果
+        predictions = self.predict_image(image_path, conf_threshold)
+        
+        result = {
+            'image_path': image_path,
+            'image_shape': (img_height, img_width),
+            'predictions': predictions,
+            'prediction_count': len(predictions)
+        }
+        
+        # 创建可视化
+        plt.figure(figsize=(12, 8))
+        plt.imshow(image)
+        plt.axis('off')
+        
+        # 绘制预测结果
+        for pred in predictions:
+            x_min, y_min, x_max, y_max = pred['bbox']
+            confidence = pred['confidence']
+            class_name = pred['class_name']
+            
+            rect = plt.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min,
+                               linewidth=2, edgecolor='red', facecolor='none', alpha=0.8)
+            plt.gca().add_patch(rect)
+            
+            label = f"{class_name}: {confidence:.2f}"
+            plt.text(x_min, y_min - 5, label, bbox=dict(boxstyle="round,pad=0.3", facecolor='red', alpha=0.7),
+                    fontsize=10, color='white', weight='bold')
+        
+        plt.title(f"检测结果: {os.path.basename(image_path)} (共找到 {len(predictions)} 个目标)", 
+                 fontsize=14, weight='bold')
+        
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
+            print(f"结果保存到: {save_path}")
+        
+        plt.show()
+        
+        return result
+    
     def _print_analysis(self, analysis: Dict):
         """打印分析结果"""
         print("\n" + "="*70)
@@ -386,55 +601,6 @@ class DentalDetectionDemo:
                 print(f"   GT-{match['gt_idx']+1} ({match['gt_class']}) <-> "
                       f"Pred-{match['pred_idx']+1} ({match['pred_class']}, "
                       f"{match['confidence']:.2f}) | IoU: {match['iou']:.3f}")
-    
-    def predict_only(self, image_path: str):
-        """仅进行预测，不需要真实标签对比"""
-        image_path = Path(image_path)
-        
-        # 加载图片
-        image = cv2.imread(str(image_path))
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        
-        # 模型预测
-        predictions = self.predict_image(str(image_path))
-        
-        print(f"\n预测结果: 检测到 {len(predictions)} 个目标")
-        
-        # 可视化预测结果
-        fig, ax = plt.subplots(1, 1, figsize=(12, 8))
-        
-        ax.imshow(image_rgb)
-        ax.set_title(f'预测结果 ({len(predictions)} 个)', fontsize=18, fontweight='bold',
-                    pad=20, color='darkred')
-        ax.axis('off')
-        
-        TEXT_BG = dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.8)
-        
-        for i, pred in enumerate(predictions):
-            x_min, y_min, x_max, y_max = pred['bbox']
-            
-            # 绘制预测框
-            rect = patches.Rectangle(
-                (x_min, y_min), x_max - x_min, y_max - y_min,
-                linewidth=3, edgecolor=self.PRED_COLOR, facecolor='none', alpha=0.8
-            )
-            ax.add_patch(rect)
-            
-            # 添加标签
-            ax.text(x_min, y_min - 10, 
-                   f"Pred-{i+1}: {pred['class_name']} ({pred['confidence']:.2f})", 
-                   fontsize=12, color=self.PRED_TEXT_COLOR, fontweight='bold', bbox=TEXT_BG)
-        
-        plt.tight_layout()
-        plt.show()
-        
-        # 打印预测详情
-        if predictions:
-            print("\n预测详情:")
-            for i, pred in enumerate(predictions):
-                print(f"   Pred-{i+1}: {pred['class_name']} (置信度: {pred['confidence']:.2f})")
-        else:
-            print("未检测到任何目标")
     
     def show_image_selector(self, test_dir: str):
         """显示图片选择器"""
