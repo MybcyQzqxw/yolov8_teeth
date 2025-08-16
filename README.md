@@ -83,7 +83,7 @@ pip install -r requirements.txt
 
 ### 2. 数据集准备
 
-（1）dentalai 数据集
+（1）dentalai 数据集（照片）
 
 下载地址：<https://datasetninja.com/dentalai>
 
@@ -97,7 +97,7 @@ python scripts/data_preprocessing/dentalai/dataset_extract.py
 python scripts/data_preprocessing/dentalai/dataset_convert.py
 ```
 
-（2）dentalx 数据集
+（2）dentalx 数据集（X光片）
 
 下载地址：<https://zenodo.org/records/7812323#.ZDQE1uxBwUG>
 
@@ -112,7 +112,7 @@ python scripts/data_preprocessing/dentalai/dataset_convert.py
 # 解压数据集
 python scripts/data_preprocessing/dentalx/dataset_extract.py
 
-# 转换为 YOLO 格式（专门用于疾病检测，按7:2:1比例划分训练:验证:测试集）
+# 转换为 YOLO 格式
 python scripts/data_preprocessing/dentalx/dataset_convert.py
 ```
 
@@ -120,24 +120,24 @@ python scripts/data_preprocessing/dentalx/dataset_convert.py
 
 ### 3. 训练模型
 
-```bash
-# 🚀 立即训练！（默认参数，自动选择 GPU 或 CPU）
-python scripts/train.py
-```
-
-### 4. 进阶训练
-
 ``` bash
 # 指定轮数
-python scripts/train.py --epochs 50
-python scripts/train.py -e 100
+python scripts/train.py --epochs 30
+python scripts/train.py -e 30
 
 # 指定模型
-python scripts/train.py --model yolov8n --epochs 50
-python scripts/train.py -m yolov8s -e 100
+python scripts/train.py --model yolov8m
+python scripts/train.py -m yolov8m
+
+# 指定数据集和输出目录
+python scripts/train.py -data_dir ./preprocessed_datasets/dentalai -output_dir ./outputs/dentalai
+python scripts/train.py -d ./preprocessed_datasets/dentalai -o ./outputs/dentalai
 
 # 完整参数示例
-python scripts/train.py -m yolov8l -e 200 -b 32 --imgsz 1024 --device 0 --patience 50
+# （1）dentalai 数据集（照片）
+python scripts/train.py -m yolov8n -e 1 -b -1 -d ./preprocessed_datasets/dentalai -o ./outputs/dentalai
+# （2）dentalx 数据集（X光片）
+python scripts/train.py -m yolov8n -e 1 -b -1 -d ./preprocessed_datasets/dentalx -o ./outputs/dentalx
 
 # 查看帮助信息
 python scripts/train.py --help
@@ -290,14 +290,12 @@ python scripts/train.py --resume_dir ./outputs/dentalai/train_yolov8m_30ep_2025_
 
 训练完成后，使用 `scripts/test.py` 对模型进行全面评估和可视化分析。
 
-### 🚀 快速测试
-
 ```bash
-# 自动选择最新训练的模型进行测试
-python scripts/test.py
+# （1）dentalai 数据集
+python scripts/test.py --model ./outputs/dentalai/train_yolov8m_1ep_2025_08_14_12_35_22/weights/best.pt -d preprocessed_datasets/dentalai/data.yaml
 
-# 指定特定模型文件
-python scripts/test.py --model ./outputs/dentalai/train_yolov8m_30ep_2025_08_14_14_30_25/weights/best.pt
+# （2）dentalx 数据集
+python scripts/test.py --model ./outputs/dentalx/train_yolov8m_1ep_2025_08_16_10_24_33/weights/best.pt -d preprocessed_datasets/dentalx/data.yaml
 ```
 
 ### 📋 测试参数
@@ -309,20 +307,6 @@ python scripts/test.py --model ./outputs/dentalai/train_yolov8m_30ep_2025_08_14_
 | `--output_dir`    | `-o` | str   | "./test_results"                 | 测试结果输出目录     |
 | `--samples`       | `-s` | int   | 10                               | 可视化对比样本数量   |
 | `--conf_threshold`| `-c` | float | 0.3                              | 预测置信度阈值       |
-
-### 🎯 测试示例
-
-```bash
-# 完整参数测试
-python scripts/test.py -m ./outputs/dentalai/train_yolov8m_30ep_2025_08_14_14_30_25/weights/best.pt \
-                       -d ./preprocessed_datasets/dentalai/data.yaml \
-                       -o ./my_test_results \
-                       -s 20 \
-                       -c 0.5
-
-# 快速测试（使用默认参数）
-python scripts/test.py --model ./outputs/dentalai/train_yolov8m_30ep_2025_08_14_14_30_25/weights/best.pt
-```
 
 ### 📊 测试输出结果
 
