@@ -326,7 +326,7 @@ python scripts/test.py --model ./outputs/dentalai/train_yolov8m_1ep_2025_08_14_1
 python scripts/test.py --model ./outputs/dentalx/train_yolov8m_1ep_2025_08_16_12_19_12/weights/best.pt -d preprocessed_datasets/dentalx/data.yaml
 
 # （3）oralxrays9 数据集
-python scripts/test.py --model ./outputs/oralxrays9/train_yolov8m_1ep_2025_08_17_20_59_46/weights/best.pt -d preprocessed_datasets/oralxrays9/data.yaml
+python scripts/test.py --model ./outputs/oralxrays9/train_yolov8m_1ep_2025_08_17_21_25_02/weights/best.pt -d preprocessed_datasets/oralxrays9/data.yaml
 ```
 
 ### 📋 测试参数
