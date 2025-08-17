@@ -202,8 +202,6 @@ names: {class_names}  # class names
     print(f"- 输出目录: {output_dir}")
     print(f"- 配置文件: {yaml_path}")
     print(f"- 类别文件: {classes_path}")
-    print(f"\n可以使用以下命令开始训练:")
-    print(f"python scripts/train.py --data {yaml_path}")
     
     return True
 

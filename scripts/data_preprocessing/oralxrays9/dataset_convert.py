@@ -261,8 +261,6 @@ def main():
     try:
         convert_dataset(args.src_dir, args.dest_dir, args.test_split)
         print(f"\n数据集转换完成! 目标目录: {args.dest_dir}")
-        print("\n现在可以使用以下命令训练模型：")
-        print(f"python scripts/train.py --dataset_name oralxrays9 --epochs 30")
     except Exception as e:
         print(f"转换失败: {e}")
 

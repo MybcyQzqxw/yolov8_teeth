@@ -79,8 +79,6 @@ def main():
         print("    │   └── instances_val2017.json")
         print("    ├── train2017/          # 训练图片")
         print("    └── val2017/            # 验证图片")
-        print("\n下一步请运行转换脚本：")
-        print("python scripts/data_preprocessing/oralxrays9/dataset_convert.py")
 
 if __name__ == '__main__':
     main()

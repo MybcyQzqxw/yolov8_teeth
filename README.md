@@ -320,13 +320,13 @@ python scripts/train.py --resume_dir ./outputs/oralxrays9/train_yolov8m_1ep_2025
 # 完整参数示例
 
 # （1）dentalai 数据集
-python scripts/test.py --model ./outputs/dentalai/train_yolov8m_1ep_2025_08_14_12_35_22/weights/best.pt -d preprocessed_datasets/dentalai/data.yaml
+python scripts/test.py --model ./outputs/dentalai/train_yolov8m_1ep_2025_08_17_23_51_23/weights/best.pt -d preprocessed_datasets/dentalai/data.yaml
 
 # （2）dentalx 数据集
-python scripts/test.py --model ./outputs/dentalx/train_yolov8m_1ep_2025_08_16_12_19_12/weights/best.pt -d preprocessed_datasets/dentalx/data.yaml
+python scripts/test.py --model ./outputs/dentalx/train_yolov8m_1ep_2025_08_18_00_17_39/weights/best.pt -d preprocessed_datasets/dentalx/data.yaml
 
 # （3）oralxrays9 数据集
-python scripts/test.py --model ./outputs/oralxrays9/train_yolov8m_1ep_2025_08_17_21_25_02/weights/best.pt -d preprocessed_datasets/oralxrays9/data.yaml
+python scripts/test.py --model ./outputs/oralxrays9/train_yolov8m_1ep_2025_08_18_00_21_00/weights/best.pt -d preprocessed_datasets/oralxrays9/data.yaml
 ```
 
 ### 📋 测试参数
