@@ -17,5 +17,8 @@ scikit-learn>=1.0.0
 # YAML support (already included with ultralytics but explicitly listed)
 PyYAML>=6.0
 
+# Archive extraction and compression
+pyzipper>=0.3.6
+
 # Note: Pillow, NumPy, tqdm, requests 
 # are automatically installed as ultralytics dependencies
