@@ -11,12 +11,18 @@ yolov8_teeth/
 ├── requirements.txt             # Python依赖包列表
 ├── demo.ipynb                   # 🎯 交互式检测演示Notebook
 ├── datasets/                    # 原始数据集目录
-│   └── dentalai/               # Dentalai牙齿检测数据集
+│   ├── dentalai/               # Dentalai牙齿检测数据集
+│   ├── dentalx/                # DentalX X光片疾病检测数据集
+│   └── oralxrays9/             # OralXrays-9 X光片9类检测数据集
 ├── preprocessed_datasets/       # 🔄 预处理后的YOLO格式数据集
-│   └── dentalai/               # 转换后的dentalai数据集
+│   ├── dentalai/               # 转换后的dentalai数据集
+│   ├── dentalx/                # 转换后的dentalx数据集
+│   └── oralxrays9/             # 转换后的oralxrays9数据集
 ├── models/                      # 📦 预训练模型存储目录
 ├── outputs/                     # 🏆 训练输出结果目录
-│   └── dentalai/               # dentalai数据集的训练结果
+│   ├── dentalai/               # dentalai数据集的训练结果
+│   ├── dentalx/                # dentalx数据集的训练结果
+│   └── oralxrays9/             # oralxrays9数据集的训练结果
 ├── test_results/                # 📊 模型测试结果目录
 ├── scripts/                     # 🚀 核心脚本目录
 │   ├── __init__.py             
@@ -24,9 +30,15 @@ yolov8_teeth/
 │   ├── test.py                 # 📈 模型测试评估脚本
 │   └── data_preprocessing/     # 数据预处理脚本集合
 │       ├── __init__.py
-│       └── dentalai/          # Dentalai数据集处理脚本
+│       ├── dentalai/          # Dentalai数据集处理脚本
+│       │   ├── dataset_extract.py   # 数据集解压工具
+│       │   └── dataset_convert.py   # 格式转换工具 (Supervisely → YOLO)
+│       ├── dentalx/           # DentalX数据集处理脚本
+│       │   ├── dataset_extract.py   # 数据集解压工具
+│       │   └── dataset_convert.py   # 格式转换工具 (COCO → YOLO)
+│       └── oralxrays9/        # OralXrays-9数据集处理脚本
 │           ├── dataset_extract.py   # 数据集解压工具
-│           └── dataset_convert.py   # 格式转换工具 (Supervisely → YOLO)
+│           └── dataset_convert.py   # 格式转换工具 (COCO → YOLO)
 └── utils/                       # 🛠️ 工具模块库
     ├── __init__.py
     ├── demo_utils.py           # 🎨 Demo演示工具类
