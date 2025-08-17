@@ -152,8 +152,10 @@ def visualize_predictions_vs_labels(image_paths, label_dir, model, class_names, 
         # 加载真实标签
         gt_labels = load_ground_truth_labels(label_path)
         
-        # 预测
-        results = model.predict(image_path, verbose=False)
+        # 预测（指定保存到临时目录避免在outputs下生成detect文件夹）
+        temp_predict_dir = os.path.join(output_dir, 'temp_predict')
+        os.makedirs(temp_predict_dir, exist_ok=True)
+        results = model.predict(image_path, verbose=False, save=False, save_dir=temp_predict_dir)
         
         # 显示图像
         ax.imshow(image)
@@ -209,6 +211,11 @@ def visualize_predictions_vs_labels(image_paths, label_dir, model, class_names, 
     save_path = os.path.join(output_dir, 'test_predictions_comparison.png')
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
+    
+    # 清理临时预测目录
+    temp_predict_dir = os.path.join(output_dir, 'temp_predict')
+    if os.path.exists(temp_predict_dir):
+        shutil.rmtree(temp_predict_dir)
     
     print(f"[✓] 预测对比可视化已保存至: {save_path}")
 
@@ -321,14 +328,15 @@ def run_test_evaluation(model_path, data_yaml, output_dir):
     analysis_dir = os.path.join(output_dir, 'analysis')
     os.makedirs(analysis_dir, exist_ok=True)
     
-    # 运行验证并保存详细结果
+    # 运行验证并保存详细结果（避免生成detect文件夹）
     results = model.val(
         data=data_yaml, 
         split='test', 
-        save_json=True, 
-        save_hybrid=True,
+        save_json=False,  # 不保存JSON
+        save_hybrid=False,  # 不保存混合结果
         plots=True,  # 生成所有分析图表
         save_dir=analysis_dir,  # 保存到分析目录
+        save=False,  # 关键：不保存预测结果到detect文件夹
         name='test_analysis'  # 指定子目录名
     )
     
@@ -393,13 +401,10 @@ def run_test_evaluation(model_path, data_yaml, output_dir):
                 print(f"   [×] {file_name} (未找到)")
     else:
         print(f"⚠️ 未找到YOLOv8生成的分析图表目录")
+        yolo_analysis_dir = None  # 明确设置为None
         
-        # 生成训练指标可视化（如果有results.csv）
-        results_csv = os.path.join(yolo_analysis_dir, 'results.csv')
-        if os.path.exists(results_csv):
-            metrics_plot_path = os.path.join(analysis_dir, "test_metrics.png")
-            plot_training_metrics(results_csv, metrics_plot_path)
-            print(f"   [✓] test_metrics.png")
+        # 如果没有找到YOLO分析目录，跳过相关处理
+        results_csv = None
     
     # 生成每类别详细评估（复用训练时的功能）
     print(f"🔍 开始每类别详细指标评估...")
@@ -443,8 +448,12 @@ def run_test_evaluation(model_path, data_yaml, output_dir):
     try:
         from utils.metrics import generate_metrics_report, enhanced_metrics_analysis
         
-        # 使用YOLOv8生成的results.csv
-        results_csv = os.path.join(yolo_analysis_dir, 'results.csv') if os.path.exists(os.path.join(yolo_analysis_dir, 'results.csv')) else None
+        # 使用YOLOv8生成的results.csv（如果存在）
+        results_csv = None
+        if yolo_analysis_dir and os.path.exists(yolo_analysis_dir):
+            potential_csv = os.path.join(yolo_analysis_dir, 'results.csv')
+            if os.path.exists(potential_csv):
+                results_csv = potential_csv
         
         if results_csv and os.path.exists(results_csv):
             # 计算增强指标分析
@@ -459,6 +468,26 @@ def run_test_evaluation(model_path, data_yaml, output_dir):
             
     except Exception as e:
         print(f"⚠️ 生成详细报告时出现问题: {e}")
+    
+    # 清理可能的临时文件和detect文件夹
+    detect_dirs = []
+    # 检查outputs目录下可能生成的detect文件夹
+    outputs_dir = 'outputs'
+    if os.path.exists(outputs_dir):
+        for dataset_name in ['dentalai', 'dentalx', 'oralxrays9']:
+            dataset_outputs = os.path.join(outputs_dir, dataset_name)
+            if os.path.exists(dataset_outputs):
+                detect_dir = os.path.join(dataset_outputs, 'detect')
+                if os.path.exists(detect_dir):
+                    detect_dirs.append(detect_dir)
+    
+    # 删除发现的detect文件夹
+    for detect_dir in detect_dirs:
+        try:
+            shutil.rmtree(detect_dir)
+            print(f"[✓] 已清理临时文件夹: {detect_dir}")
+        except Exception as e:
+            print(f"⚠️ 清理文件夹失败 {detect_dir}: {e}")
     
     return metrics
 

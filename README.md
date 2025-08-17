@@ -47,15 +47,15 @@ yolov8_teeth/
 #### 📂 数据目录结构
 
 - **`datasets/`**: 存放原始下载的数据集文件（如tar压缩包）
-- **`preprocessed_datasets/`**: 存放转换为YOLO格式的训练数据，包含images/labels目录和data.yaml配置
+- **`preprocessed_datasets/`**: 存放转换为YOLO格式的训练数据，包含images和labels目录、data.yaml配置
 - **`outputs/`**: 训练结果输出，按时间戳文件夹组织，包含模型权重、日志、分析图表等
 - **`test_results/`**: 测试评估结果，包含性能指标、对比图表和样本可视化
 
 #### 🎨 数据处理脚本
 
-- **`scripts/data_preprocessing/dentalai/`**: 专门处理Dentalai数据集的工具
-  - `dataset_extract.py`: 自动解压tar格式的数据集文件
-  - `dataset_convert.py`: 将Supervisely JSON格式转换为YOLO txt格式
+- **`scripts/data_preprocessing/{dataset_name}/`**: 专门处理{dataset_name}数据集的工具
+  - `dataset_extract.py`: 数据集解压
+  - `dataset_convert.py`: 数据集转换
 
 ## 快速开始
 

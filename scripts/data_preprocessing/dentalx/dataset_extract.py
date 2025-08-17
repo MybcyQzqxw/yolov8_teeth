@@ -40,8 +40,25 @@ def extract_and_flatten(directory: str):
             src = os.path.join(training_nested, item)
             dst = os.path.join(directory, item)
             if os.path.exists(dst):
+                # 保护.gitkeep文件：先备份，删除目录，再还原
+                gitkeep_path = os.path.join(dst, '.gitkeep')
+                gitkeep_backup = None
+                if os.path.exists(gitkeep_path):
+                    gitkeep_backup = os.path.join(directory, f'.gitkeep_backup_{item}')
+                    shutil.copy2(gitkeep_path, gitkeep_backup)
+                
                 shutil.rmtree(dst)
-            shutil.move(src, dst)
+                
+                # 如果有.gitkeep备份，在新目录中还原
+                if gitkeep_backup and os.path.exists(gitkeep_backup):
+                    shutil.move(src, dst)
+                    new_gitkeep = os.path.join(dst, '.gitkeep')
+                    shutil.copy2(gitkeep_backup, new_gitkeep)
+                    os.remove(gitkeep_backup)
+                else:
+                    shutil.move(src, dst)
+            else:
+                shutil.move(src, dst)
         # 清理空的嵌套目录
         shutil.rmtree(os.path.join(directory, "training_data"))
     
@@ -53,8 +70,25 @@ def extract_and_flatten(directory: str):
             src = os.path.join(validation_nested, item)
             dst = os.path.join(directory, f"val_{item}")  # 加 val_ 前缀避免冲突
             if os.path.exists(dst):
+                # 保护.gitkeep文件：先备份，删除目录，再还原
+                gitkeep_path = os.path.join(dst, '.gitkeep')
+                gitkeep_backup = None
+                if os.path.exists(gitkeep_path):
+                    gitkeep_backup = os.path.join(directory, f'.gitkeep_backup_val_{item}')
+                    shutil.copy2(gitkeep_path, gitkeep_backup)
+                
                 shutil.rmtree(dst)
-            shutil.move(src, dst)
+                
+                # 如果有.gitkeep备份，在新目录中还原
+                if gitkeep_backup and os.path.exists(gitkeep_backup):
+                    shutil.move(src, dst)
+                    new_gitkeep = os.path.join(dst, '.gitkeep')
+                    shutil.copy2(gitkeep_backup, new_gitkeep)
+                    os.remove(gitkeep_backup)
+                else:
+                    shutil.move(src, dst)
+            else:
+                shutil.move(src, dst)
         # 清理空的嵌套目录
         shutil.rmtree(os.path.join(directory, "validation_data"))
     
