@@ -13,11 +13,7 @@ from utils.metrics import generate_metrics_report, enhanced_metrics_analysis
 from utils.per_class_evaluator import evaluate_and_visualize_per_class
 
 # 配置ultralytics将模型下载到models文件夹，数据集使用当前目录
-settings.update({
-    'weights_dir': 'models',
-    'datasets_dir': 'datasets',
-    'runs_dir': 'outputs/dentalai'  # 设置运行输出目录
-})
+# 注意：runs_dir将在解析参数后动态设置
 
 def find_latest_checkpoint(output_dir):
     """
@@ -191,10 +187,12 @@ def main():
                         help="训练设备: auto, cpu, 0, 1, 2, 3... (默认: auto)")
     
     # 数据和输出
-    parser.add_argument('--data_dir', '-d', type=str, default="./preprocessed_datasets/dentalai",
-                        help="训练数据文件夹，包含 data.yaml (默认: ./preprocessed_datasets/dentalai)")
-    parser.add_argument('--output_dir', '-o', type=str, default="./outputs/dentalai",
-                        help="输出目录 (默认: ./outputs/dentalai)")
+    parser.add_argument('--dataset_name', type=str, default="dentalai",
+                        help="数据集名称，用于自动设置数据和输出路径 (默认: dentalai)")
+    parser.add_argument('--data_dir', '-d', type=str, default=None,
+                        help="训练数据文件夹，包含 data.yaml (如不指定，将使用 ./preprocessed_datasets/{dataset_name})")
+    parser.add_argument('--output_dir', '-o', type=str, default=None,
+                        help="输出目录 (如不指定，将使用 ./outputs/{dataset_name})")
     
     # 训练选项
     parser.add_argument('--patience', type=int, default=30,
@@ -218,6 +216,19 @@ def main():
 
     # 处理模型文件名
     model_file = ensure_model_extension(args.model)
+    
+    # 根据数据集名称自动设置路径
+    if args.data_dir is None:
+        args.data_dir = f"./preprocessed_datasets/{args.dataset_name}"
+    if args.output_dir is None:
+        args.output_dir = f"./outputs/{args.dataset_name}"
+    
+    # 动态配置ultralytics运行目录
+    settings.update({
+        'weights_dir': 'models',
+        'datasets_dir': 'datasets',
+        'runs_dir': args.output_dir
+    })
     
     # 验证批量大小
     if args.batch <= 0 and args.batch != -1:

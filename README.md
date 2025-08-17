@@ -118,9 +118,9 @@ python scripts/data_preprocessing/dentalx/dataset_convert.py
 
 **注意**: dentalx转换脚本专门处理疾病检测任务，只使用 `quadrant-enumeration-disease` 变体，包含4个疾病类别：Impacted、Caries、Periapical Lesion、Deep Caries。数据集共705张图像，按7:2:1比例划分为493张训练集、141张验证集、71张测试集。
 
-（3）OralXrays-9 数据集（X光片）
+（3）oralxrays9 数据集（口腔X光片）
 
-下载地址：<https://drive.google.com/drive/folders/1_y7ERcFicnOYY2DMR6Qe1W4KGdCsoQ1n?usp=drive_link>
+数据集包含牙齿检测的COCO格式标注，有10,000张训练图片和2,688张验证图片。
 
 将压缩包：
 
@@ -128,41 +128,39 @@ python scripts/data_preprocessing/dentalx/dataset_convert.py
 - `train2017.zip`
 - `val2017.zip`
 
-下载到项目根目录下的 `datasets/OralXrays-9` 文件夹中。
+下载到项目根目录下的 `datasets/oralxrays9` 文件夹中。
 
 ```bash
 # 解压数据集
-python scripts/data_preprocessing/OralXrays-9/dataset_extract.py
+python scripts/data_preprocessing/oralxrays9/dataset_extract.py
 
 # 转换为 YOLO 格式
-python scripts/data_preprocessing/OralXrays-9/dataset_convert.py
+python scripts/data_preprocessing/oralxrays9/dataset_convert.py
 ```
 
 ### 3. 训练模型
 
+现在支持通过`--dataset_name`参数简化训练命令：
+
 ``` bash
-# 指定轮数
-python scripts/train.py --epochs 30
-python scripts/train.py -e 30
+# 使用数据集名称（推荐方式）
+python scripts/train.py --dataset_name dentalai --epochs 30
+python scripts/train.py --dataset_name dentalx --model yolov8m
+python scripts/train.py --dataset_name oralxrays9 --epochs 50 --batch 16
 
-# 指定模型
-python scripts/train.py --model yolov8m
-python scripts/train.py -m yolov8m
-
-# 指定数据集和输出目录
-python scripts/train.py -data_dir ./preprocessed_datasets/dentalai -output_dir ./outputs/dentalai
-python scripts/train.py -d ./preprocessed_datasets/dentalai -o ./outputs/dentalai
+# 传统指定路径方式（仍然支持）
+python scripts/train.py --data_dir ./preprocessed_datasets/dentalai --output_dir ./outputs/dentalai
 
 # 完整参数示例
 
 # （1）dentalai 数据集（照片）
-python scripts/train.py -m yolov8m -e 1 -b -1 -d ./preprocessed_datasets/dentalai -o ./outputs/dentalai
+python scripts/train.py --dataset_name dentalai --model yolov8m --epochs 30 --batch 16
 
 # （2）dentalx 数据集（X光片）
-python scripts/train.py -m yolov8m -e 1 -b -1 -d ./preprocessed_datasets/dentalx -o ./outputs/dentalx
+python scripts/train.py --dataset_name dentalx --model yolov8m --epochs 30 --batch 16
 
-# （3）OralXrays-9 数据集（X光片）
-python scripts/train.py -m yolov8m -e 1 -b -1 -d ./preprocessed_datasets/OralXrays-9 -o ./outputs/OralXrays-9
+# （3）oralxrays9 数据集（口腔X光片）
+python scripts/train.py --dataset_name oralxrays9 --model yolov8m --epochs 50 --batch 16
 
 # 查看帮助信息
 python scripts/train.py --help
