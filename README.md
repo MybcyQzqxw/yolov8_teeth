@@ -228,34 +228,6 @@ python scripts/train.py --help
 | `--nolog`   | flag | False  | 禁用日志输出和可视化图表 | `--nolog`   |
 | `--verbose` | flag | False  | 显示详细训练信息       | `--verbose` |
 
-### 🎯 推荐使用方式
-
-#### 基础训练（推荐）
-
-```bash
-# 使用数据集名称，自动设置路径
-python scripts/train.py --dataset_name dentalai --epochs 30
-python scripts/train.py --dataset_name dentalx --model yolov8n --batch -1
-python scripts/train.py --dataset_name oralxrays9 --epochs 50 --batch 16
-```
-
-#### 高级训练（自定义路径）
-
-```bash
-# 手动指定数据和输出路径
-python scripts/train.py --data_dir ./preprocessed_datasets/dentalai --output_dir ./custom_output
-```
-
-#### 断点续训
-
-```bash
-# 自动从最新检查点继续
-python scripts/train.py --dataset_name dentalai --resume auto
-
-# 从指定目录继续训练
-python scripts/train.py --resume_dir ./outputs/dentalai/train_yolov8m_30ep_2025_08_17_15_30_25
-```
-
 ## 输出结果
 
 训练完成后会在 `outputs/{dataset_name}/` 目录生成以时间戳命名的训练文件夹：
